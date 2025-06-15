@@ -5203,7 +5203,8 @@ class Contact implements JsonSerializable {
 
     /** @return bool */
     function can_set_decision(PaperInfo $prow) {
-        return $this->can_administer($prow);
+        // 只有PC Chair可以设置决策，不允许track管理员设置决策
+        return $this->privChair;
     }
 
     /** @return bool */
