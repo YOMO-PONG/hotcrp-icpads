@@ -253,6 +253,11 @@ class Track_SettingParser extends SettingParser {
         $this->print_perm($sv, "viewrev", ["Who can see reviews?", $hint]);
     }
 
+    function print_admin_perm(SettingValues $sv, $gj) {
+        $hint = "<div class=\"f-d fx\">Track administrators can manage submissions and reviews in this track.</div>";
+        $this->print_perm($sv, "admin", ["Who can administer this track?", $hint]);
+    }
+
     private function print_track(SettingValues $sv, $ctr) {
         $this->ctr = $ctr;
         $this->cur_trx = $trx = $sv->oldv("track/{$ctr}");

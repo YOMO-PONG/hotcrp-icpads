@@ -363,6 +363,10 @@
         "name": "tracks/permissions/viewrev", "order": 30,
         "print_function": "*Track_SettingParser::print_viewrev_perm"
     },
+    {
+        "name": "tracks/permissions/admin", "order": 40,
+        "print_function": "*Track_SettingParser::print_admin_perm"
+    },
 
 
     {
