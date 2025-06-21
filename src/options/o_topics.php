@@ -63,4 +63,148 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
         }
         return true;
     }
+
+    function print_web_edit(PaperTable $pt, $ov, $reqov) {
+        $topicset = $this->topic_set();
+        
+        // 如果有Track层次结构，显示特殊界面
+        if ($topicset->has_tracks()) {
+            $this->print_hierarchical_web_edit($pt, $ov, $reqov);
+        } else {
+            // 使用父类的标准显示
+            parent::print_web_edit($pt, $ov, $reqov);
+        }
+    }
+
+    private function print_hierarchical_web_edit(PaperTable $pt, $ov, $reqov) {
+        $topicset = $this->topic_set();
+        $tracks = $topicset->get_tracks();
+        $track_topic_map = $topicset->get_track_topic_map();
+        
+        $pt->print_editable_option_papt($this, null, [
+            "id" => $this->readable_formid(),
+            "for" => false,
+        ]);
+        
+        // 生成Track-Topic映射的JavaScript对象
+        $js_map = [];
+        foreach ($track_topic_map as $track => $topic_ids) {
+            $topics = [];
+            foreach ($topic_ids as $tid) {
+                $topics[] = [
+                    'id' => $tid,
+                    'name' => htmlspecialchars($topicset->name($tid)),
+                    'checked' => in_array($tid, $reqov->value_list()),
+                    'default_checked' => in_array($tid, $ov->value_list())
+                ];
+            }
+            $js_map[$track] = $topics;
+        }
+        
+        echo '<script>
+window.hotcrpTrackTopicMap = ', json_encode($js_map), ';
+</script>';
+        
+        echo '<fieldset class="papev fieldset-covert" name="', $this->formid, '">
+        <div class="f-i">
+            <label for="track_selector"><strong>主要轨道 (Main Track)</strong></label>
+            <select id="track_selector" class="uich" name="track_selector">
+                <option value="">请选择一个轨道...</option>';
+        
+        foreach ($tracks as $track) {
+            echo '<option value="', htmlspecialchars($track), '">', htmlspecialchars($track), '</option>';
+        }
+        
+        echo '</select>
+        </div>
+        <div class="f-i" id="topics_container" style="display: none;">
+            <label><strong>相关主题 (Topics)</strong></label>
+            <ul class="ctable" id="topics_list">
+            </ul>
+        </div>
+        </fieldset>';
+        
+        // 添加JavaScript逻辑
+        echo '<script>
+(function() {
+    var trackSelector = document.getElementById("track_selector");
+    var topicsContainer = document.getElementById("topics_container");
+    var topicsList = document.getElementById("topics_list");
+    var formId = "', $this->formid, '";
+    
+    // 预先设置已选择的轨道（如果有的话）
+    var preSelectedTrack = null;
+    var selectedTopics = [];
+    ';
+    
+    // 检查是否有预选的主题，确定应该显示哪个track
+    if (!empty($reqov->value_list())) {
+        echo 'var preSelectedTopicIds = [', implode(',', $reqov->value_list()), '];
+        for (var track in window.hotcrpTrackTopicMap) {
+            var topics = window.hotcrpTrackTopicMap[track];
+            for (var i = 0; i < topics.length; i++) {
+                if (preSelectedTopicIds.indexOf(topics[i].id) !== -1) {
+                    preSelectedTrack = track;
+                    break;
+                }
+            }
+            if (preSelectedTrack) break;
+        }
+        
+        if (preSelectedTrack) {
+            trackSelector.value = preSelectedTrack;
+            updateTopicsList(preSelectedTrack);
+            topicsContainer.style.display = "block";
+        }';
+    }
+    
+    echo '
+    trackSelector.addEventListener("change", function() {
+        var selectedTrack = this.value;
+        if (selectedTrack === "") {
+            topicsContainer.style.display = "none";
+            topicsList.innerHTML = "";
+        } else {
+            updateTopicsList(selectedTrack);
+            topicsContainer.style.display = "block";
+        }
+    });
+    
+    function updateTopicsList(track) {
+        var topics = window.hotcrpTrackTopicMap[track] || [];
+        topicsList.innerHTML = "";
+        
+        topics.forEach(function(topic) {
+            var li = document.createElement("li");
+            li.className = "ctelt";
+            
+            var label = document.createElement("label");
+            label.className = "checki ctelti";
+            
+            var span = document.createElement("span");
+            span.className = "checkc";
+            
+            var checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = formId + ":" + topic.id;
+            checkbox.value = "1";
+            checkbox.className = "uic js-range-click topic-entry";
+            checkbox.setAttribute("data-range-type", formId);
+            checkbox.setAttribute("data-default-checked", topic.default_checked);
+            if (topic.checked) {
+                checkbox.checked = true;
+            }
+            
+            span.appendChild(checkbox);
+            label.appendChild(span);
+            label.appendChild(document.createTextNode(topic.name));
+            li.appendChild(label);
+            topicsList.appendChild(li);
+        });
+    }
+})();
+</script>';
+        
+        echo "</div>\n\n";
+    }
 }

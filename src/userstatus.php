@@ -1761,37 +1761,89 @@ class UserStatus extends MessageSet {
     }
 
     static function print_topics(UserStatus $us) {
-        if (!$us->user->isPC
-            && !$us->viewer->privChair) {
+        if (!$us->conf->has_topics()
+            || (!$us->user->isPC && !$us->viewer->privChair && !$us->is_new_user())
+            || ($us->is_new_user()
+                && !$us->viewer->privChair
+                && !$us->user->isPC
+                && !$us->conf->time_pc_view_active_submissions())
+            || (!$us->is_editing_authenticated()
+                && !$us->is_actas_self()
+                && !$us->viewer->privChair)
+            || (!$us->user->isPC
+                && !$us->viewer->privChair)
+            || (!$us->user->isPC
+                && !$us->viewer->privChair)) {
             return;
         }
         $us->cs()->add_section_class("w-text fx1")->print_start_section("Topic interests");
         echo '<p>Please indicate your interest in reviewing papers on these conference
 topics. We use this information to help match papers to reviewers.</p>',
             Ht::hidden("has_ti", 1),
-            $us->feedback_html_at("ti"),
-            '  <table class="table-striped profile-topic-interests"><thead>
+            $us->feedback_html_at("ti");
+
+        $ts = $us->conf->topic_set();
+        
+        // Add track filter if hierarchical topics exist
+        if ($ts->has_tracks()) {
+            $tracks = $ts->get_tracks();
+            $track_topic_map = $ts->get_track_topic_map();
+            
+            // Generate JavaScript data for filtering
+            $js_track_map = [];
+            foreach ($track_topic_map as $track => $topic_ids) {
+                $js_track_map[$track] = $topic_ids;
+            }
+            
+            echo '<script>
+window.topicTrackFilterMap = ', json_encode($js_track_map), ';
+</script>';
+            
+            echo '<div class="filter-container mb-4">
+                <label for="topic-filter-by-track" class="font-weight-bold">Filter Topics by Track:</label>
+                <select id="topic-filter-by-track" class="uich ml-2">
+                    <option value="all">Show All Tracks</option>';
+            
+            foreach ($tracks as $track) {
+                echo '<option value="', htmlspecialchars($track), '">', htmlspecialchars($track), '</option>';
+            }
+            
+            echo '</select>
+            </div>';
+        }
+
+        echo '  <table class="table-striped profile-topic-interests"><thead>
     <tr><td></td><th class="ti_interest">Low</th><th class="ti_interest"></th><th class="ti_interest"></th><th class="ti_interest"></th><th class="ti_interest">High</th></tr>
     <tr><td></td><th class="topic-2"></th><th class="topic-1"></th><th class="topic0"></th><th class="topic1"></th><th class="topic2"></th></tr></thead><tbody>', "\n";
 
         $ibound = [-INF, -1.5, -0.5, 0.5, 1.5, INF];
         $tmap = $us->user->topic_interest_map();
-        $ts = $us->conf->topic_set();
+        
         foreach ($ts->group_list() as $tg) {
             foreach ($tg->members() as $i => $tid) {
                 $tic = "ti_topic";
+                $track_attr = '';
+                
+                // Add track data attribute if this topic belongs to a track
+                if ($ts->has_tracks()) {
+                    $track = $ts->get_track_for_topic($tid);
+                    if ($track) {
+                        $track_attr = ' data-track="' . htmlspecialchars($track) . '"';
+                    }
+                }
+                
                 if ($tg->trivial() || ($i === 0 && $tg->has_group_topic())) {
                     $n = $ts->unparse_name_html($tid);
                 } else {
                     if ($i == 0) {
-                        echo "    <tr><td class=\"ti_topic\">",
+                        echo "    <tr class=\"topic-group-header\"", $track_attr, "><td class=\"ti_topic\">",
                             $tg->unparse_name_html(),
                             "</td><td class=\"ti_interest\" colspan=\"5\"></td></tr>\n";
                     }
                     $n = $ts->unparse_subtopic_name_html($tid);
                     $tic .= " ti_subtopic";
                 }
-                echo "      <tr><td class=\"{$tic}\">{$n}</td>";
+                echo "      <tr class=\"topic-item\"", $track_attr, "><td class=\"{$tic}\">{$n}</td>";
                 $ival = $tmap[$tid] ?? 0;
                 $reqval = isset($us->qreq["ti{$tid}"]) ? (int) $us->qreq["ti{$tid}"] : $ival;
                 for ($j = -2; $j <= 2; ++$j) {
@@ -1803,6 +1855,65 @@ topics. We use this information to help match papers to reviewers.</p>',
             }
         }
         echo "    </tbody></table>\n";
+        
+        // Add JavaScript for filtering functionality
+        if ($ts->has_tracks()) {
+            echo '<script>
+(function() {
+    // Topic filtering functionality
+    var trackFilter = document.getElementById("topic-filter-by-track");
+    var topicItems = document.querySelectorAll(".topic-item, .topic-group-header");
+    
+    function filterTopics(selectedTrack) {
+        topicItems.forEach(function(item) {
+            var itemTrack = item.getAttribute("data-track");
+            
+            if (selectedTrack === "all") {
+                // Show all topics
+                item.style.display = "";
+            } else if (itemTrack === selectedTrack) {
+                // Show topics that match selected track
+                item.style.display = "";
+            } else if (!itemTrack) {
+                // Hide topics without track (traditional topics) when filtering
+                item.style.display = "none";
+            } else {
+                // Hide topics that don\'t match selected track
+                item.style.display = "none";
+            }
+        });
+        
+        // Update table striping after filtering
+        updateTableStriping();
+    }
+    
+    function updateTableStriping() {
+        var visibleRows = document.querySelectorAll(".topic-item:not([style*=\"display: none\"]), .topic-group-header:not([style*=\"display: none\"])");
+        visibleRows.forEach(function(row, index) {
+            // Remove existing stripe classes
+            row.classList.remove("odd", "even");
+            // Add appropriate stripe class
+            if (index % 2 === 0) {
+                row.classList.add("even");
+            } else {
+                row.classList.add("odd");
+            }
+        });
+    }
+    
+    // Bind event listener to track filter dropdown
+    if (trackFilter) {
+        trackFilter.addEventListener("change", function() {
+            var selectedTrack = this.value;
+            filterTopics(selectedTrack);
+        });
+    }
+    
+    // Initialize table striping
+    updateTableStriping();
+})();
+</script>';
+        }
     }
 
     static function print_tags(UserStatus $us) {

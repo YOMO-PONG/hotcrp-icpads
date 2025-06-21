@@ -69,6 +69,14 @@ class TopicSet implements ArrayAccess, IteratorAggregate, Countable {
     private $_topic_abbrev_matcher;
     /** @var ?list<string> */
     private $_auto_add;
+    
+    // 新增：Track-Topic层次结构支持
+    /** @var array<string,array<int>> */
+    private $_track_topic_map = [];
+    /** @var array<int,string> */
+    private $_topic_track_map = [];
+    /** @var array<string> */
+    private $_track_list = [];
 
 
     function __construct(Conf $conf) {
@@ -80,6 +88,24 @@ class TopicSet implements ArrayAccess, IteratorAggregate, Countable {
     function __add($id, $name) {
         $this->_topic_map[$id] = $name;
         $this->_order[$id] = count($this->_order);
+
+        // 解析Track > Topic格式
+        if (strpos($name, ' > ') !== false) {
+            $parts = explode(' > ', $name, 2);
+            $track = trim($parts[0]);
+            $topic_name = trim($parts[1]);
+            
+            // 存储track-topic关系
+            if (!isset($this->_track_topic_map[$track])) {
+                $this->_track_topic_map[$track] = [];
+                $this->_track_list[] = $track;
+            }
+            $this->_track_topic_map[$track][] = $id;
+            $this->_topic_track_map[$id] = $track;
+            
+            // 更新显示名称为只有topic部分
+            $this->_topic_map[$id] = $topic_name;
+        }
 
         // check for `None of the above`, `Others`, and `GROUP: (None of |Others)`
         $len = strlen($name);
@@ -148,6 +174,10 @@ class TopicSet implements ArrayAccess, IteratorAggregate, Countable {
         $this->_group_list = $this->_group_map = null;
         $this->_topic_html = $this->_topic_abbrev_matcher = null;
         $this->_auto_add = $this->_auto_add === null ? null : [];
+        // 清除新增的track相关字段
+        $this->_track_topic_map = [];
+        $this->_topic_track_map = [];
+        $this->_track_list = [];
     }
 
     private function load_main() {
@@ -451,5 +481,32 @@ class TopicSet implements ArrayAccess, IteratorAggregate, Countable {
             }
         }
         return "<ul class=\"semi\">" . join("", $out) . "</ul>";
+    }
+
+    /** @return array<string> */
+    function get_tracks() {
+        return $this->_track_list;
+    }
+    
+    /** @return array<string,array<int>> */
+    function get_track_topic_map() {
+        return $this->_track_topic_map;
+    }
+    
+    /** @param string $track
+     * @return array<int> */
+    function get_topics_for_track($track) {
+        return $this->_track_topic_map[$track] ?? [];
+    }
+    
+    /** @param int $topic_id
+     * @return ?string */
+    function get_track_for_topic($topic_id) {
+        return $this->_topic_track_map[$topic_id] ?? null;
+    }
+    
+    /** @return bool */
+    function has_tracks() {
+        return !empty($this->_track_list);
     }
 }

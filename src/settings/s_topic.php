@@ -58,7 +58,7 @@ class Topic_SettingParser extends SettingParser {
         if (($topic_counters = $sv->oblist_keys("topic"))) {
             echo '<div class="mb-3 has-copy-topics"><table><thead><tr><th style="text-align:left">';
             if (!empty($interests)) {
-                echo '<span class="float-right n"># PC interests: </span>';
+                echo '<span class="float-right n"># PC interests: </span>';
             }
             echo '<strong>Current topics</strong></th>';
             if (!empty($interests)) {
@@ -83,6 +83,7 @@ class Topic_SettingParser extends SettingParser {
         }
 
         echo '<div class="mb-3"><label for="new_topics"><strong>New topics</strong></label> (enter one per line)<br>',
+            '<div class="f-h">支持格式：<code>普通主题名称</code> 或 <code>轨道名称 > 主题名称</code></div>',
             $sv->feedback_at("new_topics"),
             Ht::textarea("new_topics", $sv->use_req() ? $sv->reqstr("new_topics") : "", ["cols" => 80, "rows" => 2, "class" => ($sv->has_problem_at("new_topics") ? "has-error " : "") . "need-autogrow", "id" => "new_topics"]), "</div>";
     }
