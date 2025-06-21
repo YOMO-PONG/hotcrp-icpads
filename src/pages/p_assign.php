@@ -140,7 +140,7 @@ class Assign_Page {
             if ($mx->field === "email") {
                 $emx = $mx;
             } else if ($mx->field === "override" && $emx) {
-                $emx->message .= "<p>To request a review anyway, either retract the refusal or submit again with “Override” checked.</p>";
+                $emx->message .= "<p>To request a review anyway, either retract the refusal or submit again with \"Override\" checked.</p>";
             }
         }
         $this->ms->append_list($result->content["message_list"] ?? []);
@@ -486,6 +486,146 @@ class Assign_Page {
         echo "</div></div></div>\n"; // .pctbnrev .ctelti .ctelt
     }
 
+    /**
+     * Calculate and return recommended reviewers based on topic scores
+     * @param int $limit Maximum number of recommendations
+     * @param bool $exclude_conflicts Whether to exclude conflicted reviewers
+     * @return array{recommended: list<Contact>, all: list<Contact>, scores: array<int,array{score:int,conflict:bool}>}
+     */
+    private function get_recommended_reviewers($limit = 10, $exclude_conflicts = true) {
+        $prow = $this->prow;
+        $user = $this->user;
+        $all_pc = [];
+        $reviewer_data = [];
+        
+        // Collect all eligible PC members with their scores and conflict status
+        foreach ($this->conf->pc_members() as $pc) {
+            // Skip PC Chair
+            if ($pc->privChair) {
+                continue;
+            }
+            
+            if (!$pc->pc_track_assignable($prow) && !$prow->has_reviewer($pc)) {
+                continue;
+            }
+            
+            $topic_score = $prow->topic_interest_score($pc);
+            $conflict_type = $prow->conflict_type($pc);
+            $is_conflicted = Conflict::is_conflicted($conflict_type) || Conflict::is_author($conflict_type);
+            
+            $reviewer_data[$pc->contactId] = [
+                'contact' => $pc,
+                'score' => $topic_score,
+                'conflict' => $is_conflicted,
+                'preference' => $prow->preference($pc)
+            ];
+            
+            $all_pc[] = $pc;
+        }
+        
+        // Sort by topic score (descending) and preference (descending)
+        uasort($reviewer_data, function($a, $b) {
+            $score_cmp = $b['score'] <=> $a['score'];
+            if ($score_cmp !== 0) return $score_cmp;
+            
+            $pref_a = $a['preference']->preference;
+            $pref_b = $b['preference']->preference;
+            return $pref_b <=> $pref_a;
+        });
+        
+        // Filter and limit recommendations
+        $recommended = [];
+        $count = 0;
+        foreach ($reviewer_data as $cid => $data) {
+            if ($count >= $limit) break;
+            
+            if ($exclude_conflicts && $data['conflict']) {
+                continue;
+            }
+            
+            $recommended[] = $data['contact'];
+            $count++;
+        }
+        
+        // Prepare scores array for JavaScript
+        $scores = [];
+        foreach ($reviewer_data as $cid => $data) {
+            $scores[$cid] = [
+                'score' => $data['score'],
+                'conflict' => $data['conflict']
+            ];
+        }
+        
+        return [
+            'recommended' => $recommended,
+            'all' => $all_pc,
+            'scores' => $scores
+        ];
+    }
+
+    /**
+     * Print the recommended reviewers section
+     * @param array $recommended_data Result from get_recommended_reviewers()
+     * @param AssignmentCountSet $acs
+     */
+    private function print_recommended_reviewers($recommended_data, $acs) {
+        $recommended = $recommended_data['recommended'];
+        
+        echo '<div id="recommended-view">',
+            '<div class="flex-container mb-3">',
+            '<h3 class="revcard-subhead"> Recommended Reviewers</h3>',
+            '<label class="checki ml-3">',
+            '<input type="checkbox" id="exclude-conflicts" checked="checked" class="js-filter-conflicts">',
+            '<span class="checkc"></span>',
+            'Exclude conflicted reviewers',
+            '</label>',
+            '</div>';
+        
+        if (empty($recommended)) {
+            echo '<p class="feedback is-note">No recommended reviewers were found under the current settings。</p>';
+        } else {
+            echo '<div class="pc-ctable has-assignment-set need-assignment-change recommended-list">';
+            foreach ($recommended as $pc) {
+                $this->print_pc_assignment($pc, $acs);
+            }
+            echo '</div>';
+        }
+        
+        echo '<div class="mt-3">',
+            '<button type="button" class="btn btn-outline js-show-all-reviewers">',
+            ' View All PC Members',
+            '</button>',
+            '</div>',
+            '</div>';
+    }
+
+    /**
+     * Print the full reviewers section (initially hidden)
+     * @param array $all_pc All PC members
+     * @param AssignmentCountSet $acs
+     */
+    private function print_all_reviewers($all_pc, $acs) {
+        echo '<div id="full-view" style="display: none;">',
+            '<div class="flex-container mb-3">',
+            '<h3 class="revcard-subhead">All PC Members</h3>',
+            '<button type="button" class="btn btn-outline js-back-to-recommended">',
+            'Back to Recommended View',
+            '</button>',
+            '</div>',
+            
+            '<div class="mb-3">',
+            '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name or email..." />',
+            '</div>',
+            
+            '<div class="pc-ctable has-assignment-set need-assignment-change full-list">';
+        
+        foreach ($all_pc as $pc) {
+            $this->print_pc_assignment($pc, $acs);
+        }
+        
+        echo '</div></div>';
+    }
+
     function print() {
         $prow = $this->prow;
         $user = $this->user;
@@ -543,6 +683,9 @@ class Assign_Page {
         if ($user->can_administer($prow)) {
             $acs = AssignmentCountSet::load($user, AssignmentCountSet::HAS_REVIEW);
 
+            // Get recommended reviewers data
+            $recommended_data = $this->get_recommended_reviewers(10, true);
+
             // PC conflicts row
             echo '<div class="pcard revcard">',
                 '<h2 class="revcard-head" id="pc-assignments">PC assignments</h2>',
@@ -555,23 +698,25 @@ class Assign_Page {
             Ht::stash_script('$(hotcrp.load_editable_pc_assignments)');
 
             if ($this->conf->has_topics()) {
-                echo "<p>Review preferences display as “P#”, topic scores as “T#”.</p>";
+                echo "<p>Review preferences display as \"P#\", topic scores as \"T#\".</p>";
             } else {
-                echo "<p>Review preferences display as “P#”.</p>";
+                echo "<p>Review preferences display as \"P#\".</p>";
             }
 
-            echo '<div class="pc-ctable has-assignment-set need-assignment-change"';
-            $rev_rounds = array_keys($this->conf->round_selector_options(false));
-            echo ' data-review-rounds="', htmlspecialchars(json_encode($rev_rounds)), '"',
+            // Embed reviewer data for JavaScript
+            echo '<script>window.reviewerData = ', json_encode($recommended_data['scores']), ';</script>';
+
+            echo '<div class="pc-ctable-container" ',
+                'data-review-rounds="', htmlspecialchars(json_encode(array_keys($this->conf->round_selector_options(false)))), '"',
                 ' data-default-review-round="', htmlspecialchars($this->conf->assignment_round_option(false)), '">';
 
             $this->conf->ensure_cached_user_collaborators();
-            foreach ($this->conf->pc_members() as $pc) {
-                if ($pc->pc_track_assignable($prow)
-                    || $prow->has_reviewer($pc)) {
-                    $this->print_pc_assignment($pc, $acs);
-                }
-            }
+            
+            // Print recommended reviewers section
+            $this->print_recommended_reviewers($recommended_data, $acs);
+            
+            // Print all reviewers section (initially hidden)
+            $this->print_all_reviewers($recommended_data['all'], $acs);
 
             echo "</div>\n",
                 '<div class="aab">',
@@ -657,6 +802,203 @@ class Assign_Page {
             "</div>\n\n";
 
         echo "</div></div></form></div></article>\n";
+
+        // Add CSS and JavaScript for reviewer recommendation functionality
+        echo '<style>
+.flex-container { display: flex; align-items: center; justify-content: space-between; }
+.pc-ctable-container { position: relative; }
+.revcard-subhead { margin: 0; font-size: 1.1em; font-weight: bold; }
+.recommended-list .ctelt { border-left: 3px solid #28a745; }
+.conflicted-reviewer { opacity: 0.6; background-color: #fff5f5; }
+.conflicted-reviewer .pctbname { color: #dc3545; }
+.btn-outline { 
+    border: 1px solid #6c757d; 
+    background: transparent; 
+    color: #6c757d; 
+    padding: 0.375rem 0.75rem; 
+    border-radius: 0.25rem; 
+}
+.btn-outline:hover { 
+    background: #6c757d; 
+    color: white; 
+}
+#reviewer-search { 
+    padding: 0.5rem; 
+    border: 1px solid #ced4da; 
+    border-radius: 0.25rem; 
+    margin-bottom: 1rem;
+}
+.search-no-match { display: none !important; }
+.mb-3 { margin-bottom: 1rem; }
+.ml-3 { margin-left: 1rem; }
+</style>
+
+<script>
+(function() {
+    "use strict";
+    
+    var reviewerData = window.reviewerData || {};
+    var currentExcludeConflicts = true;
+    
+    // Initialize the page
+    function init() {
+        bindEventListeners();
+        updateConflictDisplay();
+    }
+    
+    // Bind all event listeners
+    function bindEventListeners() {
+        // Conflict filter checkbox
+        var excludeCheckbox = document.getElementById("exclude-conflicts");
+        if (excludeCheckbox) {
+            excludeCheckbox.addEventListener("change", function() {
+                currentExcludeConflicts = this.checked;
+                updateRecommendations();
+            });
+        }
+        
+        // View toggle buttons
+        var showAllBtn = document.querySelector(".js-show-all-reviewers");
+        var backToRecommendedBtn = document.querySelector(".js-back-to-recommended");
+        
+        if (showAllBtn) {
+            showAllBtn.addEventListener("click", function() {
+                showFullView();
+            });
+        }
+        
+        if (backToRecommendedBtn) {
+            backToRecommendedBtn.addEventListener("click", function() {
+                showRecommendedView();
+            });
+        }
+        
+        // Search functionality
+        var searchInput = document.getElementById("reviewer-search");
+        if (searchInput) {
+            searchInput.addEventListener("input", function() {
+                filterReviewersBySearch(this.value);
+            });
+        }
+    }
+    
+    // Update conflict display based on current settings
+    function updateConflictDisplay() {
+        var allReviewers = document.querySelectorAll(".ctelt[data-uid]");
+        allReviewers.forEach(function(element) {
+            var uid = element.getAttribute("data-uid");
+            var data = reviewerData[uid];
+            
+            if (data && data.conflict) {
+                element.classList.add("conflicted-reviewer");
+            } else {
+                element.classList.remove("conflicted-reviewer");
+            }
+        });
+    }
+    
+    // Update recommendations based on filter settings
+    function updateRecommendations() {
+        var recommendedContainer = document.querySelector("#recommended-view .recommended-list");
+        if (!recommendedContainer) return;
+        
+        var allReviewers = Array.from(document.querySelectorAll("#full-view .ctelt[data-uid]"));
+        var sortedReviewers = [];
+        
+        // Collect and sort reviewers by score
+        allReviewers.forEach(function(element) {
+            var uid = element.getAttribute("data-uid");
+            var data = reviewerData[uid];
+            
+            if (!data) return;
+            
+            // Skip conflicted reviewers if filtering is enabled
+            if (currentExcludeConflicts && data.conflict) {
+                return;
+            }
+            
+            sortedReviewers.push({
+                element: element,
+                score: data.score,
+                conflict: data.conflict
+            });
+        });
+        
+        // Sort by score descending
+        sortedReviewers.sort(function(a, b) {
+            return b.score - a.score;
+        });
+        
+        // Clear and rebuild recommended list
+        recommendedContainer.innerHTML = "";
+        
+        // Add top 10 (or fewer if not enough)
+        var limit = Math.min(10, sortedReviewers.length);
+        for (var i = 0; i < limit; i++) {
+            var clonedElement = sortedReviewers[i].element.cloneNode(true);
+            recommendedContainer.appendChild(clonedElement);
+        }
+        
+        // Update display if no recommendations
+        if (limit === 0) {
+            recommendedContainer.innerHTML = "<p class=\"feedback is-note\">当前设置下没有找到推荐的审稿人。</p>";
+        }
+        
+        updateConflictDisplay();
+    }
+    
+    // Show full reviewer list
+    function showFullView() {
+        document.getElementById("recommended-view").style.display = "none";
+        document.getElementById("full-view").style.display = "block";
+        
+        // Clear search when switching views
+        var searchInput = document.getElementById("reviewer-search");
+        if (searchInput) {
+            searchInput.value = "";
+            filterReviewersBySearch("");
+        }
+    }
+    
+    // Show recommended reviewer list
+    function showRecommendedView() {
+        document.getElementById("full-view").style.display = "none";
+        document.getElementById("recommended-view").style.display = "block";
+    }
+    
+    // Filter reviewers based on search input
+    function filterReviewersBySearch(searchTerm) {
+        var fullList = document.querySelector("#full-view .full-list");
+        if (!fullList) return;
+        
+        var reviewers = fullList.querySelectorAll(".ctelt");
+        var searchLower = searchTerm.toLowerCase();
+        
+        reviewers.forEach(function(reviewer) {
+            var nameElement = reviewer.querySelector(".pctbname button");
+            var visible = true;
+            
+            if (searchTerm.trim() !== "" && nameElement) {
+                var reviewerText = nameElement.textContent.toLowerCase();
+                visible = reviewerText.indexOf(searchLower) !== -1;
+            }
+            
+            if (visible) {
+                reviewer.classList.remove("search-no-match");
+            } else {
+                reviewer.classList.add("search-no-match");
+            }
+        });
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>';
 
         $this->qreq->print_footer();
     }
