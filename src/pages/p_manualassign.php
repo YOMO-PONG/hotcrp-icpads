@@ -18,6 +18,168 @@ class ManualAssign_Page {
         $this->qreq = $qreq;
     }
 
+    /**
+     * 生成智能分组的PC成员选择器选项
+     * 排除PC Chair，按轨道分组，显示工作量信息
+     * @param AssignmentCountSet $acs
+     * @return array 分组的选项数组
+     */
+    private function get_grouped_pc_options($acs) {
+        $grouped_options = [
+            'track_chairs' => [],
+            'track_members' => [],
+            'other_members' => []
+        ];
+        
+        // 获取所有轨道标签
+        $track_tags = $this->conf->track_tags();
+        $track_groups = [];
+        
+        foreach ($this->conf->pc_members() as $pc) {
+            // 排除PC Chair
+            if ($pc->privChair) {
+                continue;
+            }
+            
+            // 获取审稿人的工作量信息
+            $ac = $acs->get($pc->contactId);
+            $workload_info = "";
+            if ($ac->rev > 0) {
+                $workload_info = " [Total Reviews: {$ac->rev}";
+                if ($ac->pri > 0) {
+                    $workload_info .= " ({$ac->pri} primary)";
+                }
+                $workload_info .= "]";
+            } else {
+                $workload_info = " [Total Reviews: 0]";
+            }
+            
+            // 格式化显示名称
+            $display_name = htmlspecialchars($pc->name(NAME_P|NAME_S)) . $workload_info;
+            
+            // 检查用户标签以确定分组
+            $user_group = 'other_members';
+            $track_name = '';
+            
+            if ($pc->contactTags) {
+                // 检查是否为轨道主席
+                foreach ($track_tags as $track_tag) {
+                    $chair_tag = $track_tag . '-chair';
+                    $member_tag = $track_tag . '-member';
+                    
+                    if (stripos($pc->contactTags, " {$chair_tag}#") !== false) {
+                        $user_group = 'track_chairs';
+                        $track_name = ucfirst(str_replace('-', ' ', $track_tag));
+                        break;
+                    } else if (stripos($pc->contactTags, " {$member_tag}#") !== false) {
+                        $user_group = 'track_members';
+                        $track_name = ucfirst(str_replace('-', ' ', $track_tag));
+                        if (!isset($track_groups[$track_tag])) {
+                            $track_groups[$track_tag] = [];
+                        }
+                        $track_groups[$track_tag][] = [
+                            'email' => $pc->email,
+                            'name' => $display_name
+                        ];
+                        continue 2; // 跳出两层循环
+                    }
+                }
+            }
+            
+            // 添加到相应分组
+            if ($user_group === 'track_chairs') {
+                $grouped_options['track_chairs'][] = [
+                    'email' => $pc->email,
+                    'name' => $display_name,
+                    'track' => $track_name
+                ];
+            } else if ($user_group === 'other_members') {
+                $grouped_options['other_members'][] = [
+                    'email' => $pc->email,
+                    'name' => $display_name
+                ];
+            }
+        }
+        
+        // 将轨道成员组合并到主数组
+        $grouped_options['track_groups'] = $track_groups;
+        
+        // 排序各组
+        usort($grouped_options['track_chairs'], function($a, $b) {
+            return strcmp($a['name'], $b['name']);
+        });
+        
+        foreach ($track_groups as &$members) {
+            usort($members, function($a, $b) {
+                return strcmp($a['name'], $b['name']);
+            });
+        }
+        
+        usort($grouped_options['other_members'], function($a, $b) {
+            return strcmp($a['name'], $b['name']);
+        });
+        
+        return $grouped_options;
+    }
+
+    /**
+     * 渲染分组的PC成员选择器
+     * @param array $grouped_options 分组选项
+     * @param string $selected_email 当前选中的邮箱
+     * @return string HTML select元素
+     */
+    private function render_grouped_pc_selector($grouped_options, $selected_email = null) {
+        $html = '<select name="reviewer" class="uich need-diff-check" id="pc-reviewer-selector">';
+        
+        // 默认选项
+        if (!$selected_email) {
+            $html .= '<option value="0" selected>(Select a PC member)</option>';
+        } else {
+            $html .= '<option value="0">(Select a PC member)</option>';
+        }
+        
+        // 轨道主席组
+        if (!empty($grouped_options['track_chairs'])) {
+            $html .= '<optgroup label="Track Chairs">';
+            foreach ($grouped_options['track_chairs'] as $chair) {
+                $selected = ($selected_email === $chair['email']) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars($chair['email']) . '"' . $selected . '>';
+                $html .= $chair['name'];
+                $html .= '</option>';
+            }
+            $html .= '</optgroup>';
+        }
+        
+        // 各轨道成员组
+        foreach ($grouped_options['track_groups'] as $track_tag => $members) {
+            if (!empty($members)) {
+                $track_display = ucfirst(str_replace('-', ' ', $track_tag)) . ' Members';
+                $html .= '<optgroup label="' . htmlspecialchars($track_display) . '">';
+                foreach ($members as $member) {
+                    $selected = ($selected_email === $member['email']) ? ' selected' : '';
+                    $html .= '<option value="' . htmlspecialchars($member['email']) . '"' . $selected . '>';
+                    $html .= $member['name'];
+                    $html .= '</option>';
+                }
+                $html .= '</optgroup>';
+            }
+        }
+        
+        // 其他PC成员组
+        if (!empty($grouped_options['other_members'])) {
+            $html .= '<optgroup label="Other PC Members">';
+            foreach ($grouped_options['other_members'] as $member) {
+                $selected = ($selected_email === $member['email']) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars($member['email']) . '"' . $selected . '>';
+                $html .= $member['name'];
+                $html .= '</option>';
+            }
+            $html .= '</optgroup>';
+        }
+        
+        $html .= '</select>';
+        return $html;
+    }
 
     private function save(Contact $reviewer) {
         $rcid = $reviewer->contactId;
@@ -262,17 +424,10 @@ class ManualAssign_Page {
         Ht::stash_script('$("#selectreviewerform").awaken()');
 
         $acs = AssignmentCountSet::load($this->viewer, AssignmentCountSet::HAS_REVIEW);
-        $rev_opt = [];
-        if (!$reviewer) {
-            $rev_opt[0] = "(Select a PC member)";
-        }
-        foreach ($this->conf->pc_members() as $pc) {
-            $rev_opt[$pc->email] = htmlspecialchars($pc->name(NAME_P|NAME_S)) . " ("
-                . plural($acs->get($pc->contactId)->rev, "assignment") . ")";
-        }
+        $grouped_options = $this->get_grouped_pc_options($acs);
 
         echo "<table><tr><td><strong>PC member:</strong> &nbsp;</td>",
-            "<td>", Ht::select("reviewer", $rev_opt, $reviewer ? $reviewer->email : 0), "</td></tr>",
+            "<td>", $this->render_grouped_pc_selector($grouped_options, $reviewer ? $reviewer->email : null), "</td></tr>",
             "<tr><td colspan=\"2\"><hr class=\"g\"></td></tr>\n";
 
         // Paper selection
@@ -299,6 +454,105 @@ class ManualAssign_Page {
 
         echo '<hr class="c">';
         $this->qreq->print_footer();
+        
+        // 添加CSS样式美化PC成员选择器
+        echo '<style>
+#pc-reviewer-selector {
+    min-width: 400px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#pc-reviewer-selector optgroup {
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+    padding: 5px 0;
+}
+
+#pc-reviewer-selector optgroup[label="Track Chairs"] {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+#pc-reviewer-selector optgroup[label*="Members"] {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+#pc-reviewer-selector optgroup[label="Other PC Members"] {
+    background-color: #e8f5e8;
+    color: #388e3c;
+}
+
+#pc-reviewer-selector option {
+    padding: 3px 8px;
+    font-weight: normal;
+    color: #333;
+}
+
+#pc-reviewer-selector option:hover {
+    background-color: #e3f2fd;
+}
+
+.assignpc_pcsel {
+    margin-bottom: 20px;
+}
+
+.reviewer-workload-info {
+    font-size: 0.9em;
+    color: #666;
+    font-weight: normal;
+}
+</style>';
+
+        // 添加JavaScript增强功能
+        echo '<script>
+(function() {
+    "use strict";
+    
+    // 当页面加载完成后执行
+    document.addEventListener("DOMContentLoaded", function() {
+        var selector = document.getElementById("pc-reviewer-selector");
+        if (!selector) return;
+        
+        // 添加选择器变化监听
+        selector.addEventListener("change", function() {
+            var selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value !== "0") {
+                // 可以在这里添加额外的逻辑，比如显示选中审稿人的详细信息
+                console.log("Selected reviewer:", selectedOption.text);
+            }
+        });
+        
+        // 添加搜索功能（可选）
+        var searchBox = document.createElement("input");
+        searchBox.type = "text";
+        searchBox.placeholder = "Search reviewers...";
+        searchBox.className = "reviewer-search-box";
+        searchBox.style.cssText = "margin-left: 10px; padding: 5px; border: 1px solid #ccc; border-radius: 3px;";
+        
+        searchBox.addEventListener("input", function() {
+            var searchTerm = this.value.toLowerCase();
+            var options = selector.getElementsByTagName("option");
+            
+            for (var i = 0; i < options.length; i++) {
+                var option = options[i];
+                if (option.value === "0") continue; // 跳过默认选项
+                
+                var text = option.textContent.toLowerCase();
+                if (text.indexOf(searchTerm) !== -1) {
+                    option.style.display = "";
+                } else {
+                    option.style.display = "none";
+                }
+            }
+        });
+        
+        // 将搜索框插入到选择器后面
+        selector.parentNode.insertBefore(searchBox, selector.nextSibling);
+    });
+})();
+</script>';
     }
 
 
