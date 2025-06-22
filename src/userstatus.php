@@ -833,7 +833,7 @@ class UserStatus extends MessageSet {
                 $ms && $ms->error_at("roles", "<0>Format error near “none”");
                 return $old_roles;
             } else if (is_bool($reset_roles) && is_bool($action) === $reset_roles) {
-                $ms && $ms->warning_at("roles", "<0>Expected ‘" . ($reset_roles ? "" : "+") . "{$v}’ in roles");
+                $ms && $ms->warning_at("roles", "<0>Expected '" . ($reset_roles ? "" : "+") . "{$v}' in roles");
             } else if ($reset_roles === null) {
                 $reset_roles = $action === null;
             }
@@ -846,7 +846,7 @@ class UserStatus extends MessageSet {
                        || strcasecmp($v, "admin") === 0) {
                 $role = Contact::ROLE_ADMIN;
             } else if (strcasecmp($v, "none") !== 0) {
-                $ms && $ms->warning_at("roles", "<0>Unknown role ‘{$v}’");
+                $ms && $ms->warning_at("roles", "<0>Unknown role '{$v}'");
             }
             if ($action !== false) {
                 $add_roles |= $role;
@@ -879,7 +879,7 @@ class UserStatus extends MessageSet {
             && ($old_user->roles & (Contact::ROLE_ADMIN | Contact::ROLE_CHAIR)) !== 0
             && ($roles & (Contact::ROLE_ADMIN | Contact::ROLE_CHAIR)) === 0) {
             $what = $old_user->roles & Contact::ROLE_CHAIR ? "chair" : "system administration";
-            $this->warning_at("roles", "<0>You can’t drop your own {$what} privileges. Ask another administrator to do it for you");
+            $this->warning_at("roles", "<0>You can't drop your own {$what} privileges. Ask another administrator to do it for you");
             $roles |= $old_user->roles & Contact::ROLE_PCLIKE;
         }
         return $roles;
@@ -1019,11 +1019,11 @@ class UserStatus extends MessageSet {
 
         // - check save mode
         if ($this->save_mode === self::SAVE_EXISTING && !$old_user) {
-            $this->error_at("email", "<0>Account ‘{$cj->email}’ not found");
+            $this->error_at("email", "<0>Account '{$cj->email}' not found");
             return false;
         }
         if ($this->save_mode === self::SAVE_NEW && $old_user) {
-            $this->error_at("email", "<0>Email address ‘{$email}’ is already in use");
+            $this->error_at("email", "<0>Email address '{$email}' is already in use");
             return false;
         }
         $user = $old_user ?? $old_cdb_user;
@@ -1698,7 +1698,7 @@ class UserStatus extends MessageSet {
                 $roles[0] = ucfirst($roles[0]);
             }
             echo '<p class="w-text mb-1">', join(", ", $roles), '</p>',
-                self::feedback_html([MessageItem::warning("<0>This account’s security settings are locked, so its roles cannot be changed.")]);
+                self::feedback_html([MessageItem::warning("<0>This account's security settings are locked, so its roles cannot be changed.")]);
             return;
         }
 
@@ -1804,8 +1804,21 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
                 <select id="topic-filter-by-track" class="uich ml-2">
                     <option value="all">Show All Tracks</option>';
             
+            // Track display names mapping
+            $track_display_names = [
+                'cloud-edge' => 'Cloud & Edge Computing ',
+                'wsmc' => 'Wireless Sensing & Mobile Computing ',
+                'ii-internet' => 'Industrial Informatics & Industrial Internet ',
+                'infosec' => 'Information Security',
+                'sads' => 'System and Applied Data Science',
+                'big-data-fm' => 'Big Data & Foundation Models ',
+                'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
+                'dist-storage' => 'Distributed Storage',
+            ];
+            
             foreach ($tracks as $track) {
-                echo '<option value="', htmlspecialchars($track), '">', htmlspecialchars($track), '</option>';
+                $display_name = $track_display_names[$track] ?? $track;
+                echo '<option value="', htmlspecialchars($track), '">', htmlspecialchars($display_name), '</option>';
             }
             
             echo '</select>
@@ -1979,7 +1992,7 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
                 $disabled = true;
             } else if ($us->user->security_locked_here()) {
                 $klass = "flex-grow-1 disabled";
-                $p = "<p class=\"pt-1 mb-0 feedback is-warning\">This account’s security settings are locked, so it cannot be " . ($disablement ? "enabled" : "disabled") . ".</p>";
+                $p = "<p class=\"pt-1 mb-0 feedback is-warning\">This account's security settings are locked, so it cannot be " . ($disablement ? "enabled" : "disabled") . ".</p>";
                 $disabled = true;
             } else {
                 $klass = "ui js-disable-user flex-grow-1 " . ($disablement ? "btn-success" : "btn-danger");
@@ -2076,7 +2089,7 @@ John Adams,john@earbox.org,UC Berkeley,pc
             return;
         }
         echo '<dl class="ctelt dd"><dt><code>topic: &lt;TOPIC NAME&gt;</code></dt>',
-            '<dd>Topic interest: blank, “<code>low</code>”, “<code>medium-low</code>”, “<code>medium-high</code>”, or “<code>high</code>”, or numeric (-2 to 2)</dd></dl>';
+            '<dd>Topic interest: blank, "<code>low</code>", "<code>medium-low</code>", "<code>medium-high</code>", or "<code>high</code>", or numeric (-2 to 2)</dd></dl>';
     }
 
 

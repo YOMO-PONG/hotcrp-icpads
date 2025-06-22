@@ -81,6 +81,21 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
         $tracks = $topicset->get_tracks();
         $track_topic_map = $topicset->get_track_topic_map();
         
+        // ===== 新增：轨道系统标签到显示名称的映射关系 =====
+        $track_display_names = [
+            // 轨道系统标签 => 完整显示名称
+            'cloud-edge' => 'Cloud & Edge Computing ',
+            'wsmc' => 'Wireless Sensing & Mobile Computing ',
+            'ii-internet' => 'Industrial Informatics & Industrial Internet ',
+            'infosec' => 'Information Security',
+            'sads' => 'System and Applied Data Science',
+            'big-data-fm' => 'Big Data & Foundation Models ',
+            'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
+            'dist-storage' => 'Distributed Storage',
+            // 您可以根据实际需要继续添加更多轨道映射...
+        ];
+        // =====================================================
+        
         $pt->print_editable_option_papt($this, null, [
             "id" => $this->readable_formid(),
             "for" => false,
@@ -107,18 +122,23 @@ window.hotcrpTrackTopicMap = ', json_encode($js_map), ';
         
         echo '<fieldset class="papev fieldset-covert" name="', $this->formid, '">
         <div class="f-i">
-            <label for="track_selector"><strong>主要轨道 (Main Track)</strong></label>
+            <label for="track_selector"><strong>Main Track</strong></label>
             <select id="track_selector" class="uich" name="track_selector">
-                <option value="">请选择一个轨道...</option>';
+                <option value="">Select a track...</option>';
         
-        foreach ($tracks as $track) {
-            echo '<option value="', htmlspecialchars($track), '">', htmlspecialchars($track), '</option>';
+        // ===== 修改：使用映射关系生成轨道选项 =====
+        foreach ($tracks as $track_tag) {
+            // 获取显示名称，如果没有映射则使用原标签
+            $display_name = $track_display_names[$track_tag] ?? $track_tag;
+            // value属性仍然是系统标签，但显示文本是完整名称
+            echo '<option value="', htmlspecialchars($track_tag), '">', htmlspecialchars($display_name), '</option>';
         }
+        // =============================================
         
         echo '</select>
         </div>
         <div class="f-i" id="topics_container" style="display: none;">
-            <label><strong>相关主题 (Topics)</strong></label>
+            <label><strong>Topics</strong></label>
             <ul class="ctable" id="topics_list">
             </ul>
         </div>
