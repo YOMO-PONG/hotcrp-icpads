@@ -81,32 +81,6 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
         $tracks = $topicset->get_tracks();
         $track_topic_map = $topicset->get_track_topic_map();
         
-        // ===== 新增：轨道系统标签到显示名称的映射关系 =====
-        $track_display_names = [
-            // 轨道系统标签 => 完整显示名称
-            'cloud-edge' => 'Cloud & Edge Computing ',
-            'wsmc' => 'Wireless Sensing & Mobile Computing ',
-            'ii-internet' => 'Industrial Informatics & Internet ',
-            'infosec' => 'Information Security',
-            'sads' => 'System and Applied Data Science',
-            'big-data-fm' => 'Big Data & Foundation Models ',
-            'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
-            'dist-storage' => 'Distributed Storage',
-            'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
-            'rfa' => 'RF Computing and AIoT Application',
-            'dsui' => 'Distributed System and Ubiquitous Intelligence',
-            'wma' => 'Wireless and Mobile AIoT',
-            'bdmls' => 'Big Data and Machine Learning Systems',
-            'ncea' => 'SS:Networked Computing for Embodied AI',
-            'aimc' => 'Artificial Intelligence for Mobile Computing',
-            'idpm' => 'Intelligent Data Processing & Management',
-            'badv' => 'Blockchain & Activation of Data Value',
-            'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
-            'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
-            // 您可以根据实际需要继续添加更多轨道映射...
-        ];
-        // =====================================================
-        
         $pt->print_editable_option_papt($this, null, [
             "id" => $this->readable_formid(),
             "for" => false,
@@ -117,9 +91,10 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
         foreach ($track_topic_map as $track => $topic_ids) {
             $topics = [];
             foreach ($topic_ids as $tid) {
+                $topic_name = $topicset->name($tid);
                 $topics[] = [
                     'id' => $tid,
-                    'name' => htmlspecialchars($topicset->name($tid)),
+                    'name' => htmlspecialchars($topic_name),
                     'checked' => in_array($tid, $reqov->value_list()),
                     'default_checked' => in_array($tid, $ov->value_list())
                 ];
@@ -127,84 +102,126 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
             $js_map[$track] = $topics;
         }
         
+        // 将Track-Topic映射数据注入到JavaScript全局变量
         echo '<script>
 window.hotcrpTrackTopicMap = ', json_encode($js_map), ';
 </script>';
         
+        // 只显示Topics容器，不再显示冗余的Main Track选择器
         echo '<fieldset class="papev fieldset-covert" name="', $this->formid, '">
-        <div class="f-i">
-            <label for="track_selector"><strong>Main Track</strong></label>
-            <select id="track_selector" class="uich" name="track_selector">
-                <option value="">Select a track...</option>';
-        
-        // ===== 修改：使用映射关系生成轨道选项 =====
-        foreach ($tracks as $track_tag) {
-            // 获取显示名称，如果没有映射则使用原标签
-            $display_name = $track_display_names[$track_tag] ?? $track_tag;
-            // value属性仍然是系统标签，但显示文本是完整名称
-            echo '<option value="', htmlspecialchars($track_tag), '">', htmlspecialchars($display_name), '</option>';
-        }
-        // =============================================
-        
-        echo '</select>
-        </div>
-        <div class="f-i" id="topics_container" style="display: none;">
-            <label><strong>Topics</strong></label>
+        <div class="f-i" id="topics_container">
             <ul class="ctable" id="topics_list">
             </ul>
         </div>
         </fieldset>';
         
-        // 添加JavaScript逻辑
+        // 添加JavaScript逻辑来监听第一个Track字段的变化
         echo '<script>
 (function() {
-    var trackSelector = document.getElementById("track_selector");
     var topicsContainer = document.getElementById("topics_container");
     var topicsList = document.getElementById("topics_list");
     var formId = "', $this->formid, '";
     
-    // 预先设置已选择的轨道（如果有的话）
-    var preSelectedTrack = null;
-    var selectedTopics = [];
-    ';
+    // 查找主Track选择器
+    var mainTrackSelector = null;
+    var allSelects = document.querySelectorAll("select");
     
-    // 检查是否有预选的主题，确定应该显示哪个track
-    if (!empty($reqov->value_list())) {
-        echo 'var preSelectedTopicIds = [', implode(',', $reqov->value_list()), '];
-        for (var track in window.hotcrpTrackTopicMap) {
-            var topics = window.hotcrpTrackTopicMap[track];
-            for (var i = 0; i < topics.length; i++) {
-                if (preSelectedTopicIds.indexOf(topics[i].id) !== -1) {
-                    preSelectedTrack = track;
+    for (var i = 0; i < allSelects.length; i++) {
+        var select = allSelects[i];
+        var selectName = (select.name || "").toLowerCase();
+        var selectId = (select.id || "").toLowerCase();
+        
+        // 检查name或id是否包含track
+        if (selectName.includes("track") || selectId.includes("track")) {
+            if (select.id !== "track_selector") {
+                mainTrackSelector = select;
+                break;
+            }
+        }
+        
+        // 检查选项内容是否看起来像轨道选择器
+        var hasTrackOptions = false;
+        for (var j = 0; j < select.options.length; j++) {
+            var optText = select.options[j].text.toLowerCase();
+            var optValue = select.options[j].value.toLowerCase();
+            if (optText.includes("cloud") || optText.includes("computing") || 
+                optText.includes("security") || optText.includes("data") ||
+                optValue.includes("cloud") || optValue.includes("edge")) {
+                hasTrackOptions = true;
+                break;
+            }
+        }
+        
+        if (hasTrackOptions && select.id !== "track_selector") {
+            mainTrackSelector = select;
+            break;
+        }
+    }
+    
+    if (!mainTrackSelector) {
+        return;
+    }
+    
+    function updateTopicsList(trackValue) {
+        if (!trackValue || trackValue === "") {
+            topicsList.innerHTML = "";
+            topicsContainer.style.display = "none";
+            return;
+        }
+        
+        // 轨道值映射
+        var trackMapping = {
+            "Cloud & Edge Computing": "cloud-edge",
+            "Wireless Sensing & Mobile Computing": "wsmc", 
+            "Industrial Informatics & Internet": "ii-internet",
+            "Information Security": "infosec",
+            "System and Applied Data Science": "sads",
+            "Big Data & Foundation Models": "big-data-fm",
+            "AIGC & Multi-Agent Parallel Computing": "aigc-mapc",
+            "Distributed Storage": "dist-storage",
+            "Next-Generation Mobile Networks and Connected Systems": "ngm",
+            "RF Computing and AIoT Application": "rfa",
+            "Distributed System and Ubiquitous Intelligence": "dsui",
+            "Wireless and Mobile AIoT": "wma",
+            "Big Data and Machine Learning Systems": "bdmls",
+            "SS:Networked Computing for Embodied AI": "ncea",
+            "Artificial Intelligence for Mobile Computing": "aimc",
+            "Intelligent Data Processing & Management": "idpm",
+            "Blockchain & Activation of Data Value": "badv",
+            "SS:Millimeter-Wave and Terahertz Sensing and Networks": "mwt",
+            "Interdisciplinary Distributed System and IoT Applications": "idsia"
+        };
+        
+        var internalTrack = trackMapping[trackValue] || trackValue.toLowerCase() || trackValue;
+        var topics = window.hotcrpTrackTopicMap[internalTrack] || [];
+        
+        // 如果没找到，尝试其他可能的键
+        if (topics.length === 0) {
+            var availableKeys = Object.keys(window.hotcrpTrackTopicMap || {});
+            for (var k = 0; k < availableKeys.length; k++) {
+                var key = availableKeys[k];
+                if (key.toLowerCase().includes(trackValue.toLowerCase()) || 
+                    trackValue.toLowerCase().includes(key.toLowerCase())) {
+                    topics = window.hotcrpTrackTopicMap[key];
                     break;
                 }
             }
-            if (preSelectedTrack) break;
         }
         
-        if (preSelectedTrack) {
-            trackSelector.value = preSelectedTrack;
-            updateTopicsList(preSelectedTrack);
-            topicsContainer.style.display = "block";
-        }';
-    }
-    
-    echo '
-    trackSelector.addEventListener("change", function() {
-        var selectedTrack = this.value;
-        if (selectedTrack === "") {
-            topicsContainer.style.display = "none";
-            topicsList.innerHTML = "";
-        } else {
-            updateTopicsList(selectedTrack);
-            topicsContainer.style.display = "block";
+        // 精确匹配
+        if (topics.length === 0 && window.hotcrpTrackTopicMap[trackValue]) {
+            topics = window.hotcrpTrackTopicMap[trackValue];
         }
-    });
-    
-    function updateTopicsList(track) {
-        var topics = window.hotcrpTrackTopicMap[track] || [];
+        
+        // 清空现有topics
         topicsList.innerHTML = "";
         
+        if (topics.length === 0) {
+            topicsContainer.style.display = "none";
+            return;
+        }
+        
+        // 生成topic复选框
         topics.forEach(function(topic) {
             var li = document.createElement("li");
             li.className = "ctelt";
@@ -232,7 +249,65 @@ window.hotcrpTrackTopicMap = ', json_encode($js_map), ';
             li.appendChild(label);
             topicsList.appendChild(li);
         });
+        
+        topicsContainer.style.display = "block";
     }
+    
+    // 监听主Track选择器的变化
+    function bindTrackSelector() {
+        // 初始化
+        var currentValue = mainTrackSelector.value;
+        var currentText = mainTrackSelector.selectedIndex >= 0 ? mainTrackSelector.options[mainTrackSelector.selectedIndex].text : "";
+        
+        if (currentValue && currentValue !== "") {
+            updateTopicsList(currentValue);
+            // 也尝试使用显示文本
+            if (currentText && currentText !== currentValue) {
+                setTimeout(function() {
+                    if (topicsList.children.length === 0) {
+                        updateTopicsList(currentText);
+                    }
+                }, 100);
+            }
+        }
+        
+        // 监听变化事件
+        mainTrackSelector.addEventListener("change", function() {
+            var selectedTrack = this.value;
+            var selectedText = this.selectedIndex >= 0 ? this.options[this.selectedIndex].text : "";
+            
+            updateTopicsList(selectedTrack);
+            // 如果按值没找到，尝试按显示文本
+            setTimeout(function() {
+                if (topicsList.children.length === 0) {
+                    updateTopicsList(selectedText);
+                }
+            }, 100);
+        });
+        
+        // 监听点击事件
+        mainTrackSelector.addEventListener("click", function() {
+            var selectedTrack = this.value;
+            var selectedText = this.selectedIndex >= 0 ? this.options[this.selectedIndex].text : "";
+            
+            if (selectedTrack && selectedTrack !== "") {
+                setTimeout(function() {
+                    updateTopicsList(selectedTrack);
+                    if (topicsList.children.length === 0) {
+                        updateTopicsList(selectedText);
+                    }
+                }, 50);
+            }
+        });
+    }
+    
+    // 立即绑定或等待DOM准备
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bindTrackSelector);
+    } else {
+        bindTrackSelector();
+    }
+    
 })();
 </script>';
         
