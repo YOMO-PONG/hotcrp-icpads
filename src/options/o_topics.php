@@ -86,12 +86,23 @@ class Topics_PaperOption extends CheckboxesBase_PaperOption {
             // 轨道系统标签 => 完整显示名称
             'cloud-edge' => 'Cloud & Edge Computing ',
             'wsmc' => 'Wireless Sensing & Mobile Computing ',
-            'ii-internet' => 'Industrial Informatics & Industrial Internet ',
+            'ii-internet' => 'Industrial Informatics & Internet ',
             'infosec' => 'Information Security',
             'sads' => 'System and Applied Data Science',
             'big-data-fm' => 'Big Data & Foundation Models ',
             'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
             'dist-storage' => 'Distributed Storage',
+            'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
+            'rfa' => 'RF Computing and AIoT Application',
+            'dsui' => 'Distributed System and Ubiquitous Intelligence',
+            'wma' => 'Wireless and Mobile AIoT',
+            'bdmls' => 'Big Data and Machine Learning Systems',
+            'ncea' => 'SS:Networked Computing for Embodied AI',
+            'aimc' => 'Artificial Intelligence for Mobile Computing',
+            'idpm' => 'Intelligent Data Processing & Management',
+            'badv' => 'Blockchain & Activation of Data Value',
+            'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
+            'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
             // 您可以根据实际需要继续添加更多轨道映射...
         ];
         // =====================================================

@@ -1839,12 +1839,23 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
             $track_display_names = [
                 'cloud-edge' => 'Cloud & Edge Computing ',
                 'wsmc' => 'Wireless Sensing & Mobile Computing ',
-                'ii-internet' => 'Industrial Informatics & Industrial Internet ',
+                'ii-internet' => 'Industrial Informatics & Internet ',
                 'infosec' => 'Information Security',
                 'sads' => 'System and Applied Data Science',
                 'big-data-fm' => 'Big Data & Foundation Models ',
                 'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
                 'dist-storage' => 'Distributed Storage',
+                'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
+                'rfa' => 'RF Computing and AIoT Application',
+                'dsui' => 'Distributed System and Ubiquitous Intelligence',
+                'wma' => 'Wireless and Mobile AIoT',
+                'bdmls' => 'Big Data and Machine Learning Systems',
+                'ncea' => 'SS:Networked Computing for Embodied AI',
+                'aimc' => 'Artificial Intelligence for Mobile Computing',
+                'idpm' => 'Intelligent Data Processing & Management',
+                'badv' => 'Blockchain & Activation of Data Value',
+                'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
+                'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
             ];
             
             foreach ($tracks as $track) {
