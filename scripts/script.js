@@ -12288,7 +12288,7 @@ handle_ui.on("document-uploader", function (event) {
         var form = that.form,
             upload_limit = find_first_attr("data-upload-limit", [doce, form, document.body], Infinity),
             max_size = find_first_attr("data-document-max-size", [doce, form, document.body], upload_limit);
-        blob_limit = Math.min(find_first_attr("data-blob-limit", [form, document.body], 5 << 20), upload_limit);
+        blob_limit = Math.min(find_first_attr("data-blob-limit", [form, document.body], 10 << 20), upload_limit);
         if (file && max_size > 0 && file.size > max_size) {
             alert("File too big.");
             that.value = "";

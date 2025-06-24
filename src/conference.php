@@ -5164,6 +5164,11 @@ class Conf {
         if (($x = $this->opt["uploadMaxFilesize"] ?? null) !== null) {
             echo ' data-document-max-size="', ini_get_bytes(null, $x), '"';
         }
+        if (($x = $this->opt["uploadApiMaxBlob"] ?? null) !== null) {
+            echo ' data-blob-limit="', ini_get_bytes(null, $x), '"';
+        } else {
+            echo ' data-blob-limit="33554432"'; // 32MB default
+        }
         echo '><div id="p-page" class="need-banner-offset"><div id="p-header">';
 
         // initial load (JS's timezone offsets are negative of PHP's)

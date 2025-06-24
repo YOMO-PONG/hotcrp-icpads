@@ -70,9 +70,11 @@
 			"After setting your password and logging in, please complete the following crucial steps as soon as possible:\n\n",
 			"✅ Update Your Profile: Make sure your affiliation and other personal information are up to date.\n\n",
 			"✅ Set Your Topic Interests: This is the most important initial step. Please go to your profile page and indicate your interest level for each conference topic. This information is critical for us to assign you papers that best match your expertise.\n\n",
+			"Location of Profile page: You will get a reminder to edit your profile when you enter the system, or you can change your profile in the 'account settings' in the upper right corner.\n\n",	
+			"In the coming weeks, you will receive further instructions about the review process, including paper bidding and review assignments. "	,	
 			"Thank you once again for your dedication to making {{CONFSHORTNAME}} a great success. Should you have any questions, please do not hesitate to contact us at {{ADMIN}}.\n\n",
 			"Best regards,\n\n",
-			"PC Chair, {{CONFSHORTNAME}}\n",
+			"TPC Co-Chairs, {{CONFSHORTNAME}}\n",
 			"{{LINK}}\n"
 		]
 	},
