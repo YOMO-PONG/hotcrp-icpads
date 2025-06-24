@@ -629,7 +629,7 @@ class UserStatus extends MessageSet {
             && !$this->has_problem_at("preferred_email")
             && !validate_email($cj->preferred_email)
             && (!$old_user || $old_user->preferredEmail !== $cj->preferred_email)) {
-            $this->error_at("preferred_email", "<0>Invalid email address ‘{$cj->preferred_email}’");
+            $this->error_at("preferred_email", "<0>Invalid email address '{$cj->preferred_email}'");
         }
 
         // Address
@@ -830,7 +830,7 @@ class UserStatus extends MessageSet {
                 $ms && $ms->error_at("roles", "<0>Format error in roles");
                 return $old_roles;
             } else if (is_bool($action) && strcasecmp($v, "none") === 0) {
-                $ms && $ms->error_at("roles", "<0>Format error near “none”");
+                $ms && $ms->error_at("roles", "<0>Format error near \"none\"");
                 return $old_roles;
             } else if (is_bool($reset_roles) && is_bool($action) === $reset_roles) {
                 $ms && $ms->warning_at("roles", "<0>Expected '" . ($reset_roles ? "" : "+") . "{$v}' in roles");
@@ -914,12 +914,12 @@ class UserStatus extends MessageSet {
         }
         if ($user->affiliation === ""
             && ($user->contactId > 0 || !$cdbu || $cdbu->affiliation === "")) {
-            $us->warning_at("affiliation", "<0>Please enter your affiliation (use “None” or “Unaffiliated” if you have none)");
+            $us->warning_at("affiliation", "<0>Please enter your affiliation (use \"None\" or \"Unaffiliated\" if you have none)");
         }
         if ($user->is_pc_member()) {
             if ($user->collaborators() === "") {
                 $us->warning_at("collaborators", "<0>Please enter your recent collaborators and other affiliations");
-                $us->inform_at("collaborators", "<0>This information can help detect conflicts of interest. Enter “None” if you have none.");
+                $us->inform_at("collaborators", "<0>This information can help detect conflicts of interest. Enter \"None\" if you have none.");
             }
             if ($us->conf->has_topics()
                 && !$user->topic_interest_map()
@@ -1125,7 +1125,38 @@ class UserStatus extends MessageSet {
                 || (($eff_old_roles & Contact::ROLE_PCLIKE) === 0
                     && ($roles & Contact::ROLE_PCLIKE) !== 0)) {
                 if (($roles & Contact::ROLE_PC) !== 0) {
-                    $prep = $user->prepare_mail("@newaccount.pc");
+                    // CUSTOM MODIFICATION: Select email template based on 'track-chair' tag at creation
+                    $template_name = "@newaccount.pc";
+                    
+                    // Check if the user has 'track-chair' tag in the submitted form data
+                    $has_track_chair_tag = false;
+                    if (isset($this->jval->tags) && is_array($this->jval->tags)) {
+                        foreach ($this->jval->tags as $tag) {
+                            list($tag_name, $tag_value) = Tagger::unpack($tag);
+                            if (strtolower($tag_name) === 'track-chair') {
+                                $has_track_chair_tag = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Also check add_tags array for bulk operations
+                    if (!$has_track_chair_tag && isset($this->jval->add_tags) && is_array($this->jval->add_tags)) {
+                        foreach ($this->jval->add_tags as $tag) {
+                            list($tag_name, $tag_value) = Tagger::unpack($tag);
+                            if (strtolower($tag_name) === 'track-chair') {
+                                $has_track_chair_tag = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Use custom template if track-chair tag is present
+                    if ($has_track_chair_tag) {
+                        $template_name = "@newaccount.pc.chair";
+                    }
+                    
+                    $prep = $user->prepare_mail($template_name);
                 } else if (($roles & Contact::ROLE_ADMIN) !== 0) {
                     $prep = $user->prepare_mail("@newaccount.admin");
                 } else {

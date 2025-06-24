@@ -55,18 +55,25 @@
 		"name": "newaccount.pc",
 		"subject": "[{{CONFSHORTNAME}}] Welcome to the program committee",
 		"body": [
-			"Greetings,\n\n",
-			"You have been added to the program committee on the {{CONFNAME}} submission site.\n\n",
-			"* Site: {{LINK}}\n",
-			"* Email: {{EMAIL}}\n\n",
+			"Dear {{NAME}},\n\n",
+			"On behalf of the Technical Program Committee, I would like to sincerely thank you for accepting our invitation to serve on the Program Committee for the 31st IEEE International Conference on Parallel and Distributed Systems（ICPADS 2025）. We are thrilled to have you on board and look forward to your valuable contributions.\n\n",
+			"To get started, you will first need to set up your account on our submission site.\n\n",
+			"1. Activate Your Account\n\n",
+			"📧 Site: {{LINK}}\n\n",
+			"📧 Your Email: {{EMAIL}}\n\n",
+			"🔐 Set Your Password: Please use the unique link below to create your password.\n",
 			"{{IF(NEEDPASSWORD)}}\n",
-			"You will need a password to sign in. Use this link to set one up:\n\n",
 			"{{PASSWORDLINK}}\n\n",
-			"Should the link expire, obtain a new one using \"Forgot my password\".\n",
+			"Should the link expire, you can always use the \"Forgot my password\" link on the login page to get a new one.\n",
 			"{{ENDIF}}\n\n",
-			"**NEW IN 2025**: Manage multiple accounts with different email addresses using Account settings > Manage email.\n\n",
-			"Contact {{ADMIN}} with any questions or concerns.\n\n",
-			"{{SIGNATURE}}\n{{LINK}}\n"
+			"2. Action Required\n\n",
+			"After setting your password and logging in, please complete the following crucial steps as soon as possible:\n\n",
+			"✅ Update Your Profile: Make sure your affiliation and other personal information are up to date.\n\n",
+			"✅ Set Your Topic Interests: This is the most important initial step. Please go to your profile page and indicate your interest level for each conference topic. This information is critical for us to assign you papers that best match your expertise.\n\n",
+			"Thank you once again for your dedication to making {{CONFSHORTNAME}} a great success. Should you have any questions, please do not hesitate to contact us at {{ADMIN}}.\n\n",
+			"Best regards,\n\n",
+			"PC Chair, {{CONFSHORTNAME}}\n",
+			"{{LINK}}\n"
 		]
 	},
 
@@ -93,20 +100,29 @@
 		"subject": "[{{CONFSHORTNAME}}] Account information",
 		"body": [
 			"Dear {{NAME}},\n\n",
-			"Here is your account information for the {{CONFNAME}} submission site.\n\n",
-			"* Site: {{LINK}}\n",
-			"* Email: {{EMAIL}}\n\n",
+			"Welcome to the {{CONFNAME}} ({{CONFSHORTNAME}}) submission site!\n\n",
+			"Here is your account information for accessing the conference submission system:\n\n",
+			"==================================================\n",
+			"📧 Account Details:\n",
+			"   • Site: {{LINK}}\n",
+			"   • Email: {{EMAIL}}\n",
+			"==================================================\n\n",
 			"{{IF(PASSWORDLINK)}}\n",
+			"🔐 Password Setup:\n",
 			"{{IF(NEEDPASSWORD)}}\n",
-			"You will need a password to sign in. Use this link to set one up:\n",
+			"To access your account, you will need to set up a password. Please click the following link to create your password:\n",
 			"{{ELSE}}\n",
-			"If you have forgotten your password, you may use this link to set up a new one:\n",
+			"If you have forgotten your password, you can create a new one using the following link:\n",
 			"{{ENDIF}}\n\n",
 			"{{PASSWORDLINK}}\n\n",
-			"Should the link expire, obtain a new one using \"Forgot my password\".\n",
+			"⚠️ IMPORTANT: This link will expire after some time. If it expires, you can obtain a new password reset link by clicking \"Forgot my password\" on the login page.\n",
 			"{{ENDIF}}\n\n",
-			"Contact {{ADMIN}} with any questions or concerns.\n\n",
-			"{{SIGNATURE}}\n{{LINK}}\n"
+			"📞 Support:\n",
+			"If you have any questions, technical issues, or concerns, please don't hesitate to contact our conference team at {{ADMIN}}.\n\n",
+			"Thank you for your participation in {{CONFSHORTNAME}}!\n\n",
+			"Best regards,\n",
+			"{{SIGNATURE}}\n\n",
+			"Conference Website: {{LINK}}\n"
 		]
 	},
 
@@ -755,6 +771,33 @@
 			"{{SIGNATURE}}\n{{LINK}}\n\n",
 			"{{REVIEWS}}\n",
 			"{{COMMENTS}}\n"
+		]
+	},
+
+	{
+		"name": "newaccount.pc.chair",
+		"subject": "[{{CONFSHORTNAME}}] Welcome to the Track Chair Team",
+		"body": [
+			"Dear {{NAME}},\n\n",
+			"Welcome to the The 31st IEEE International Conference on Parallel and Distributed Systems (ICPADS 2025) Program Committee as a Track Chair!\n\n",
+			"As a Track Chair, you have additional responsibilities in managing your track and guiding the review process.\n\n",
+			"1. Getting Started as Track Chair\n\n",
+			"📧 Site: {{LINK}}\n",
+			"📧 Your Email: {{EMAIL}}\n\n",
+			"🔐 Set Your Password:\n",
+			"{{IF(NEEDPASSWORD)}}\n",
+			"{{PASSWORDLINK}}\n\n",
+			"{{ENDIF}}\n\n",
+			"2. Track Chair Responsibilities\n\n",
+			"✅ Manage paper assignments within your track\n",
+			"✅ Monitor review quality and progress\n",
+			"✅ Lead track discussions and decisions\n",
+			"✅ Coordinate with other track chairs and PC chairs\n\n",
+			"We will provide you with detailed track chair guidelines and training materials shortly.\n\n",
+			"Thank you for your leadership in making {{CONFSHORTNAME}} a success!\n\n",
+			"Best regards,\n",
+			"PC Chair, {{CONFSHORTNAME}}\n",
+			"{{LINK}}\n"
 		]
 	}
 ]

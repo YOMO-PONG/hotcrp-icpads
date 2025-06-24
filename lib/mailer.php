@@ -167,7 +167,7 @@ class Mailer {
     }
 
     static function kw_signature($args, $isbool, $m) {
-        return $m->conf->opt("emailSignature") ? : "- " . $m->conf->short_name . " Submissions";
+        return $m->conf->opt("emailSignature") ? : "- " . $m->conf->short_name . " Technical Program Committee";
     }
 
     static function kw_url($args, $isbool, $m) {
