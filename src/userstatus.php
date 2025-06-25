@@ -1574,7 +1574,7 @@ class UserStatus extends MessageSet {
             && ($cdbu = $this->cdb_user())) {
             $cdbprop = $cdbu->prop($key) ?? "";
             if (($this->user->prop($key) ?? "") !== $cdbprop) {
-                return '<p class="feedback is-warning-note mt-1 mb-0">' . $this->conf->_5("<0>“{}” in global profile", $cdbprop, new FmtArg("field", $key, 0)) . '</p>';
+                return '<p class="feedback is-warning-note mt-1 mb-0">' . $this->conf->_5("<0>" . htmlspecialchars($key) . " in global profile", $cdbprop, new FmtArg("field", $key, 0)) . '</p>';
             }
         }
         return "";
@@ -1762,7 +1762,7 @@ class UserStatus extends MessageSet {
         echo '<div class="checki"><label><span class="checkc">',
             Ht::checkbox("ass", 1, $is_ass, ["data-default-checked" => $cis_ass, "class" => "uich js-profile-role" . $diffclass]),
             '</span>Sysadmin</label>',
-            '<p class="f-d">Sysadmins and PC chairs have full control over all site operations. Sysadmins need not be members of the PC. There’s always at least one administrator (sysadmin or chair).</p></div></td></tr></table>', "\n";
+            '<p class="f-d">Sysadmins and PC chairs have full control over all site operations. Sysadmins need not be members of the PC. There\'s always at least one administrator (sysadmin or chair).</p></div></td></tr></table>', "\n";
     }
 
     static function print_collaborators(UserStatus $us) {
@@ -1776,7 +1776,7 @@ class UserStatus extends MessageSet {
         $cd = $us->conf->_i("conflictdef");
         $us->cs()->add_section_class("w-text")->print_start_section();
         echo '<h3 class="', $us->control_class("collaborators", "form-h field-title"), '">Collaborators and other affiliations</h3>', "\n",
-            "<p>List potential conflicts of interest one per line, using parentheses for affiliations and institutions. We may use this information when assigning reviews.<br>Examples: “Ping Yen Zhang (INRIA)”, “All (University College London)”</p>";
+            "<p>List potential conflicts of interest one per line, using parentheses for affiliations and institutions. We may use this information when assigning reviews.<br>Examples: \"Ping Yen Zhang (INRIA)\", \"All (University College London)\"</p>";
         if ($cd !== "" && preg_match('/<(?:p|div)[ >]/', $cd)) {
             echo $cd;
         } else {
@@ -1971,6 +1971,272 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
         }
     }
 
+    /** @return bool */
+    static function display_track_membership_if(UserStatus $us) {
+        return ($us->user->isPC || $us->viewer->privChair) 
+            && $us->conf->has_tracks() 
+            && count($us->conf->all_tracks()) > 0;
+    }
+
+    static function print_track_membership(UserStatus $us) {
+        if (!self::display_track_membership_if($us)) {
+            return;
+        }
+
+        $us->cs()->add_section_class("w-text")->print_start_section("Serving Tracks");
+        
+        echo '<p>Select the tracks you wish to participate in reviewing. The system will automatically add corresponding trackmember- tags for you.</p>';
+        echo Ht::hidden("has_track_membership", 1);
+        echo $us->feedback_html_at("track_membership");
+
+        // Get all tracks
+        $all_tracks = $us->conf->all_tracks();
+        if (empty($all_tracks)) {
+            echo '<p class="f-d">No tracks are currently configured in the system.</p>';
+            return;
+        }
+
+        // Get user's current trackmember tags - use multiple methods to ensure we get them
+        $user_tags = $us->user->viewable_tags($us->viewer);
+        $all_tags = $us->user->contactTags ?? "";
+        
+        // Use the most comprehensive tag source
+        $tags_to_process = $user_tags ?: $all_tags;
+        
+        $current_tracks = [];
+        if ($tags_to_process) {
+            foreach (explode(" ", trim($tags_to_process)) as $tag) {
+                if ($tag && str_starts_with($tag, "trackmember-")) {
+                    // Remove "trackmember-" prefix and handle tag values (e.g., "trackmember-aigc-mapc#0")
+                    $track_tag_with_value = substr($tag, 12);
+                    // Remove tag value if present (e.g., "#0") using Tagger::unpack
+                    list($track_tag, $value) = Tagger::unpack($track_tag_with_value);
+                    if ($track_tag) {
+                        $current_tracks[$track_tag] = true;
+                    }
+                }
+            }
+        }
+
+
+        // Track display names mapping
+        $track_display_names = [
+            'cloud-edge' => 'Cloud & Edge Computing',
+            'wsmc' => 'Wireless Sensing & Mobile Computing',
+            'ii-internet' => 'Industrial Informatics & Internet',
+            'infosec' => 'Information Security',
+            'sads' => 'System and Applied Data Science',
+            'big-data-fm' => 'Big Data & Foundation Models',
+            'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
+            'dist-storage' => 'Distributed Storage',
+            'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
+            'rfa' => 'RF Computing and AIoT Application',
+            'dsui' => 'Distributed System and Ubiquitous Intelligence',
+            'wma' => 'Wireless and Mobile AIoT',
+            'bdmls' => 'Big Data and Machine Learning Systems',
+            'ncea' => 'SS:Networked Computing for Embodied AI',
+            'aimc' => 'Artificial Intelligence for Mobile Computing',
+            'idpm' => 'Intelligent Data Processing & Management',
+            'badv' => 'Blockchain & Activation of Data Value',
+            'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
+            'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+        ];
+
+        echo '<div class="track-membership-container">';
+        
+        $has_any_selections = false;
+        foreach ($all_tracks as $track) {
+            if ($track->is_default) {
+                continue; // Skip default track
+            }
+            
+            $track_tag = $track->tag;
+            $display_name = $track_display_names[$track_tag] ?? $track_tag;
+            $is_checked = isset($current_tracks[$track_tag]);
+            
+            // Priority: qreq value (form submission) > current saved state
+            $req_checked = isset($us->qreq["track_member_{$track_tag}"]) 
+                         ? (bool) $us->qreq["track_member_{$track_tag}"] 
+                         : $is_checked;
+
+            if ($is_checked) {
+                $has_any_selections = true;
+            }
+
+            echo '<div class="checki mb-2">';
+            echo '<label>';
+            echo Ht::checkbox("track_member_{$track_tag}", 1, $req_checked, [
+                "class" => "uic js-track-membership",
+                "data-track" => $track_tag,
+                "data-default-checked" => $is_checked ? "1" : "0",
+                "id" => "track_member_{$track_tag}",
+
+
+            ]);
+            echo '<span class="checktext ml-2">', htmlspecialchars($display_name);
+            if ($is_checked) {
+                echo ' <em class="text-success">(currently selected)</em>';
+            }
+            echo '</span>';
+            echo '</label>';
+            echo '</div>';
+        }
+        
+        echo '</div>';
+
+        // Add summary information
+        if (!$has_any_selections && !$us->is_new_user()) {
+            echo '<p class="f-h mt-3"><em>You are not currently serving on any specific tracks. Select tracks above to participate in their review process.</em></p>';
+        }
+
+        // Add JavaScript to handle real-time feedback
+        echo '<script>
+(function() {
+    var trackCheckboxes = document.querySelectorAll(".js-track-membership");
+    var originalState = {};
+    
+    // Record original state
+    trackCheckboxes.forEach(function(cb) {
+        originalState[cb.name] = cb.checked;
+    });
+    
+    function updateSaveButton() {
+        var hasChanges = false;
+        trackCheckboxes.forEach(function(cb) {
+            if (cb.checked !== originalState[cb.name]) {
+                hasChanges = true;
+            }
+        });
+        
+        var saveBtn = document.querySelector("input[name=save]");
+        if (saveBtn) {
+            if (hasChanges) {
+                saveBtn.value = "Save Changes";
+                saveBtn.classList.add("btn-warning");
+                saveBtn.classList.remove("btn-primary");
+            } else {
+                saveBtn.value = "Save changes";
+                saveBtn.classList.add("btn-primary");
+                saveBtn.classList.remove("btn-warning");
+            }
+        }
+    }
+    
+    // Add change listeners
+    trackCheckboxes.forEach(function(cb) {
+        cb.addEventListener("change", updateSaveButton);
+    });
+})();
+</script>';
+    }
+
+    static function parse_qreq_track_membership(UserStatus $us) {
+        if (!self::display_track_membership_if($us)) {
+            return;
+        }
+        
+        // Track membership data is already in qreq via standard form processing
+        // No additional parsing needed as checkbox values are automatically handled
+    }
+
+    static function save_track_membership(UserStatus $us) {
+        if (!self::display_track_membership_if($us)) {
+            return;
+        }
+
+        $all_tracks = $us->conf->all_tracks();
+        $selected_tracks = [];
+
+        // Collect selected tracks from qreq
+        foreach ($all_tracks as $track) {
+            if ($track->is_default) {
+                continue;
+            }
+            
+            $track_tag = $track->tag;
+            if (isset($us->qreq["track_member_{$track_tag}"]) && $us->qreq["track_member_{$track_tag}"]) {
+                $selected_tracks[] = $track_tag;
+            }
+        }
+
+        $user = $us->user;
+        
+        // Get current trackmember tags for comparison
+        $current_tags = $user->viewable_tags($us->viewer);
+        $old_trackmember_tags = [];
+        if ($current_tags) {
+            foreach (explode(" ", $current_tags) as $tag) {
+                if (str_starts_with($tag, "trackmember-")) {
+                    // Remove "trackmember-" prefix and handle tag values
+                    $track_tag_with_value = substr($tag, 12);
+                    list($track_tag, $value) = Tagger::unpack($track_tag_with_value);
+                    if ($track_tag) {
+                        $old_trackmember_tags[] = $track_tag;
+                    }
+                }
+            }
+        }
+
+        // Check if there are actual changes
+        sort($selected_tracks);
+        sort($old_trackmember_tags);
+        $has_changes = $selected_tracks !== $old_trackmember_tags;
+
+        if (!$has_changes) {
+            // No changes needed
+            return;
+        }
+
+        // Remove all existing trackmember- tags first
+        if ($current_tags) {
+            foreach (explode(" ", $current_tags) as $tag) {
+                if (str_starts_with($tag, "trackmember-")) {
+                    // Remove "trackmember-" prefix and handle tag values
+                    $track_tag_with_value = substr($tag, 12);
+                    list($track_tag, $value) = Tagger::unpack($track_tag_with_value);
+                    if ($track_tag) {
+                        $user->change_tag_prop("trackmember-{$track_tag}", false);
+                    }
+                }
+            }
+        }
+
+        // Add new trackmember- tags for selected tracks
+        foreach ($selected_tracks as $track_tag) {
+            $user->change_tag_prop("trackmember-{$track_tag}", 0);
+        }
+
+        // Save the changes using HotCRP's standard mechanism
+        try {
+            if ($user->prop_changed("contactTags")) {
+                if ($user->save_prop()) {
+                    // Invalidate user cache to reflect the changes
+                    $us->conf->invalidate_user($us->user);
+                    $us->user->contactTags = null; // Force reload
+                    $us->diffs["track_membership"] = true;
+                    
+                    // Log the change for audit trail
+                    $added = array_diff($selected_tracks, $old_trackmember_tags);
+                    $removed = array_diff($old_trackmember_tags, $selected_tracks);
+                    $changes = [];
+                    if (!empty($added)) {
+                        $changes[] = "added: " . implode(", ", $added);
+                    }
+                    if (!empty($removed)) {
+                        $changes[] = "removed: " . implode(", ", $removed);
+                    }
+                    if (!empty($changes)) {
+                        $us->conf->log_for($us->viewer, $us->user, "Track membership updated (" . implode("; ", $changes) . ")");
+                    }
+                } else {
+                    $us->error_at("track_membership", "Failed to save track membership information");
+                }
+            }
+        } catch (Exception $e) {
+            $us->error_at("track_membership", "Error occurred while saving track membership information: " . $e->getMessage());
+        }
+    }
+
     static function print_tags(UserStatus $us) {
         $user = $us->user;
         $tagger = new Tagger($us->viewer);
@@ -1984,7 +2250,7 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
             echo '<div class="', $us->control_class("tags", "f-i"), '">',
                 $us->feedback_html_at("tags"),
                 Ht::entry("tags", $us->qreq->tags ?? $itags, ["data-default-value" => $itags, "class" => "fullw"]),
-                "<p class=\"f-d\">Example: “heavy”. Separate tags by spaces; the “pc” tag is set automatically.<br /><strong>Tip:</strong>&nbsp;Use <a href=\"", $us->conf->hoturl("settings", "group=tags"), "\">tag colors</a> to highlight subgroups in review lists.</p></div>\n";
+                "<p class=\"f-d\">Example: \"heavy\". Separate tags by spaces; the \"pc\" tag is set automatically.<br /><strong>Tip:</strong>&nbsp;Use <a href=\"", $us->conf->hoturl("settings", "group=tags"), "\">tag colors</a> to highlight subgroups in review lists.</p></div>\n";
         } else {
             echo $itags, "<p class=\"f-d\">Tags represent PC subgroups and are set by administrators.</p>\n";
         }

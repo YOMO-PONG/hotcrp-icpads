@@ -46,9 +46,9 @@ class User_API {
             Dbl::free($result);
         }
 
-        if ($broad_lookup
+        if (($broad_lookup
             && ($db = $user->conf->contactdb())
-            && (!$found || strcasecmp($found->email, $email) !== 0)) {
+            && (!$found || strcasecmp($found->email, $email) !== 0))) {
             $result = Dbl::qe($db, "select " . $user->conf->contactdb_user_query_fields($slice) . " from ContactInfo where email>=? and email<? and (cflags&?)=0 order by email asc limit 1",
                 $email, "{$email}~", Contact::CFM_DISABLEMENT);
             $i = 0;
@@ -165,5 +165,82 @@ class User_API {
             $jr->content["placeholder"] = $user->is_placeholder();
         }
         return $jr;
+    }
+
+    /** @return JsonResult */
+    static function track_membership(Contact $user, Qrequest $qreq) {
+        // Check permissions
+        if (!$user->isPC && !$user->privChair) {
+            return JsonResult::make_permission_error("Only PC members can update track membership");
+        }
+
+        if (!$user->conf->has_tracks()) {
+            return JsonResult::make_error(404, "<0>No tracks configured in this conference");
+        }
+
+        if (!$qreq->valid_post()) {
+            return JsonResult::make_error(405, "<0>Method not allowed");
+        }
+
+        // Get the selected tracks from the request
+        $selected_tracks = $qreq->tracks ?? [];
+        if (!is_array($selected_tracks)) {
+            $selected_tracks = [$selected_tracks];
+        }
+
+        // Get all available tracks
+        $all_tracks = $user->conf->all_tracks();
+        $available_track_tags = [];
+        foreach ($all_tracks as $track) {
+            if (!$track->is_default) {
+                $available_track_tags[] = $track->tag;
+            }
+        }
+
+        // Validate selected tracks
+        foreach ($selected_tracks as $track_tag) {
+            if (!in_array($track_tag, $available_track_tags)) {
+                return JsonResult::make_error(400, "<0>Invalid track: {$track_tag}");
+            }
+        }
+
+        try {
+            // Remove all existing trackmember- tags first
+            $current_tags = $user->viewable_tags($user);
+            if ($current_tags) {
+                foreach (explode(" ", $current_tags) as $tag) {
+                    if (str_starts_with($tag, "trackmember-")) {
+                        $track_tag = substr($tag, 12);
+                        $user->change_tag_prop("trackmember-{$track_tag}", false);
+                    }
+                }
+            }
+
+            // Add new trackmember- tags for selected tracks
+            foreach ($selected_tracks as $track_tag) {
+                $user->change_tag_prop("trackmember-{$track_tag}", 0);
+            }
+
+            // Save the changes using HotCRP's standard mechanism
+            if ($user->prop_changed("contactTags")) {
+                if ($user->save_prop()) {
+                    return new JsonResult([
+                        "ok" => true,
+                        "message" => "Track membership updated successfully",
+                        "selected_tracks" => $selected_tracks
+                    ]);
+                } else {
+                    return JsonResult::make_error(500, "<0>Failed to update track membership");
+                }
+            } else {
+                return new JsonResult([
+                    "ok" => true,
+                    "message" => "No changes needed",
+                    "selected_tracks" => $selected_tracks
+                ]);
+            }
+        } catch (Exception $e) {
+            return JsonResult::make_error(500, "<0>Error updating track membership: " . $e->getMessage());
+        }
     }
 }

@@ -222,6 +222,10 @@
     "tags": ["Users"]
   },
   {
+    "name": "track-membership", "post": true, "merge": true,
+    "tags": ["Users"], "function": "User_API::track_membership"
+  },
+  {
     "name": "clickthrough", "post": true, "merge": true,
     "tags": ["Profile"]
   },

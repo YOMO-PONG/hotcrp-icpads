@@ -52,8 +52,11 @@ class Assign_Page {
 
     function handle_pc_update() {
         $reviewer = $this->qreq->reviewer;
-        if (($rname = $this->conf->sanitize_round_name($this->qreq->rev_round)) === "") {
-            $rname = "unnamed";
+        
+        // Get selected review round from request (R1 or R2)
+        $selected_round = $this->qreq->selected_round ?? "R1";
+        if (($rname = $this->conf->sanitize_round_name($selected_round)) === "") {
+            $rname = "R1"; // Default to R1
         }
         $round = CsvGenerator::quote(":" . (string) $rname);
 
@@ -100,7 +103,7 @@ class Assign_Page {
             if (isset($this->qreq["rev_round{$prow->paperId}u{$cid}"])) {
                 $x = $this->conf->sanitize_round_name($this->qreq["rev_round{$prow->paperId}u{$cid}"]);
                 if ($x !== false) {
-                    $myround = $x === "" ? "unnamed" : CsvGenerator::quote($x);
+                    $myround = $x === "" ? $rname : CsvGenerator::quote($x);
                 }
             }
 
@@ -498,6 +501,9 @@ class Assign_Page {
         $all_pc = [];
         $reviewer_data = [];
         
+        // Get paper's track tag
+        $paper_track = $this->get_paper_track_tag($prow);
+        
         // Collect all eligible PC members with their scores and conflict status
         foreach ($this->conf->pc_members() as $pc) {
             // Skip PC Chair
@@ -505,7 +511,13 @@ class Assign_Page {
                 continue;
             }
             
+            // Check if PC member is assignable to this track
             if (!$pc->pc_track_assignable($prow) && !$prow->has_reviewer($pc)) {
+                continue;
+            }
+            
+            // Filter by track membership if paper has a track
+            if ($paper_track && !$this->is_track_member($pc, $paper_track)) {
                 continue;
             }
             
@@ -564,6 +576,44 @@ class Assign_Page {
     }
 
     /**
+     * Get the track tag of a paper
+     * @param PaperInfo $prow
+     * @return string|null
+     */
+    private function get_paper_track_tag(PaperInfo $prow) {
+        $all_tags = $prow->all_tags_text();
+        if (empty($all_tags)) {
+            return null;
+        }
+        
+        // Get all track tags from conference
+        $track_tags = $this->conf->track_tags();
+        if (empty($track_tags)) {
+            return null;
+        }
+        
+        // Find which track this paper belongs to
+        foreach ($track_tags as $track_tag) {
+            if ($prow->has_tag($track_tag)) {
+                return $track_tag;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Check if a PC member is a member of the specified track
+     * @param Contact $pc
+     * @param string $track_tag
+     * @return bool
+     */
+    private function is_track_member(Contact $pc, $track_tag) {
+        $member_tag = "trackmember-{$track_tag}";
+        return $pc->has_tag($member_tag);
+    }
+
+    /**
      * Print the recommended reviewers section
      * @param array $recommended_data Result from get_recommended_reviewers()
      * @param AssignmentCountSet $acs
@@ -573,7 +623,16 @@ class Assign_Page {
         
         echo '<div id="recommended-view">',
             '<div class="flex-container mb-3">',
-            '<h3 class="revcard-subhead"> Recommended Reviewers</h3>',
+            '<h3 class="revcard-subhead">Recommended reviewers</h3>',
+            '<div class="review-round-selector">',
+            '<label for="review-round-select">Review round:</label>',
+            '<select id="review-round-select" class="ml-2">',
+            '<option value="R1">R1 (First round)</option>',
+            '<option value="R2">R2 (Second round)</option>',
+            '</select>',
+            '</div>',
+            '</div>',
+            '<div class="flex-container mb-3">',
             '<label class="checki ml-3">',
             '<input type="checkbox" id="exclude-conflicts" checked="checked" class="js-filter-conflicts">',
             '<span class="checkc"></span>',
@@ -612,11 +671,9 @@ class Assign_Page {
             'Back to Recommended View',
             '</button>',
             '</div>',
-            
             '<div class="mb-3">',
             '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name or email..." />',
             '</div>',
-            
             '<div class="pc-ctable has-assignment-set need-assignment-change full-list">';
         
         foreach ($all_pc as $pc) {
@@ -685,6 +742,9 @@ class Assign_Page {
 
             // Get recommended reviewers data
             $recommended_data = $this->get_recommended_reviewers(10, true);
+            
+            // Get paper track for JavaScript
+            $paper_track = $this->get_paper_track_tag($prow);
 
             // PC conflicts row
             echo '<div class="pcard revcard">',
@@ -703,8 +763,9 @@ class Assign_Page {
                 echo "<p>Review preferences display as \"P#\".</p>";
             }
 
-            // Embed reviewer data for JavaScript
+            // Embed reviewer data and paper track for JavaScript
             echo '<script>window.reviewerData = ', json_encode($recommended_data['scores']), ';</script>';
+            echo '<script>window.paperTrack = ', json_encode($paper_track), ';</script>';
 
             echo '<div class="pc-ctable-container" ',
                 'data-review-rounds="', htmlspecialchars(json_encode(array_keys($this->conf->round_selector_options(false)))), '"',
@@ -827,10 +888,35 @@ class Assign_Page {
     border: 1px solid #ced4da; 
     border-radius: 0.25rem; 
     margin-bottom: 1rem;
+    width: 100%;
 }
 .search-no-match { display: none !important; }
 .mb-3 { margin-bottom: 1rem; }
 .ml-3 { margin-left: 1rem; }
+.ml-2 { margin-left: 0.5rem; }
+.review-round-selector { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.5rem;
+}
+.review-round-selector label {
+    margin: 0;
+    font-weight: bold;
+}
+.review-round-selector select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    background: white;
+    font-size: 0.9em;
+}
+.track-info {
+    background: #e9ecef;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.9em;
+}
 </style>
 
 <script>
@@ -839,15 +925,42 @@ class Assign_Page {
     
     var reviewerData = window.reviewerData || {};
     var currentExcludeConflicts = true;
+    var currentRound = "R1";
     
     // Initialize the page
     function init() {
         bindEventListeners();
         updateConflictDisplay();
+        showTrackInfo();
+    }
+    
+    // Show track information
+    function showTrackInfo() {
+        var paperTrack = window.paperTrack || null;
+        if (paperTrack) {
+            var trackInfo = document.createElement("div");
+            trackInfo.className = "track-info";
+            trackInfo.innerHTML = "<strong>Current paper track:</strong>" + paperTrack + 
+                                " <em>(Only show members of this track: trackmember-" + paperTrack + ")</em>";
+            
+            var recommendedView = document.getElementById("recommended-view");
+            if (recommendedView) {
+                recommendedView.insertBefore(trackInfo, recommendedView.firstChild);
+            }
+        }
     }
     
     // Bind all event listeners
     function bindEventListeners() {
+        // Round selector
+        var roundSelect = document.getElementById("review-round-select");
+        if (roundSelect) {
+            roundSelect.addEventListener("change", function() {
+                currentRound = this.value;
+                updateAssignmentForm();
+            });
+        }
+        
         // Conflict filter checkbox
         var excludeCheckbox = document.getElementById("exclude-conflicts");
         if (excludeCheckbox) {
@@ -879,6 +992,21 @@ class Assign_Page {
             searchInput.addEventListener("input", function() {
                 filterReviewersBySearch(this.value);
             });
+        }
+    }
+    
+    // Update assignment form with selected round
+    function updateAssignmentForm() {
+        var form = document.getElementById("f-pc-assignments");
+        if (form) {
+            var hiddenInput = form.querySelector("input[name=\'selected_round\']");
+            if (!hiddenInput) {
+                hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = "selected_round";
+                form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = currentRound;
         }
     }
     
@@ -941,7 +1069,7 @@ class Assign_Page {
         
         // Update display if no recommendations
         if (limit === 0) {
-            recommendedContainer.innerHTML = "<p class=\"feedback is-note\">当前设置下没有找到推荐的审稿人。</p>";
+            recommendedContainer.innerHTML = "<p class=\"feedback is-note\">No recommended reviewers were found under the current settings.</p>";
         }
         
         updateConflictDisplay();
