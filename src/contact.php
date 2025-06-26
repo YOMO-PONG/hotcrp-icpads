@@ -267,6 +267,7 @@ class Contact implements JsonSerializable {
         "email" => self::PROP_LOCAL | self::PROP_CDB | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_SLICE,
         "firstName" => self::PROP_LOCAL | self::PROP_CDB | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_SLICE | self::PROP_NAME | self::PROP_UPDATE | self::PROP_IMPORT,
         "lastName" => self::PROP_LOCAL | self::PROP_CDB | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_SLICE | self::PROP_NAME | self::PROP_UPDATE | self::PROP_IMPORT,
+        "title" => self::PROP_LOCAL | self::PROP_CDB | self::PROP_NULL | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_UPDATE | self::PROP_IMPORT,
         "preferredEmail" => self::PROP_LOCAL | self::PROP_NULL | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_IMPORT,
         "affiliation" => self::PROP_LOCAL | self::PROP_CDB | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_SLICE | self::PROP_UPDATE | self::PROP_IMPORT,
         "phone" => self::PROP_LOCAL | self::PROP_NULL | self::PROP_STRING | self::PROP_SIMPLIFY | self::PROP_UPDATE | self::PROP_IMPORT,

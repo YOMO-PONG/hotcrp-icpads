@@ -791,7 +791,7 @@ class Conf {
 
         if (isset($this->opt["timezone"])) {
             if (!date_default_timezone_set($this->opt["timezone"])) {
-                $this->error_msg("<0>Timezone option ‘" . $this->opt["timezone"] . "’ is invalid; falling back to ‘America/New_York’");
+                $this->error_msg("<0>Timezone option '" . $this->opt["timezone"] . "' is invalid; falling back to 'America/New_York'");
                 date_default_timezone_set("America/New_York");
             }
         } else if (!ini_get("date.timezone") && !getenv("TZ")) {
@@ -1416,7 +1416,7 @@ class Conf {
         if (($f = $this->review_form()->field($fid))) {
             return $f;
         } else {
-            throw new Exception("Unknown review field ‘{$fid}’");
+            throw new Exception("Unknown review field '{$fid}'");
         }
     }
 
@@ -1750,7 +1750,7 @@ class Conf {
         } else if (!preg_match('/\A[a-zA-Z](?:[a-zA-Z0-9]|[-_][a-zA-Z0-9])*\z/', $rname)) {
             return "Invalid round name (must start with a letter and contain only letters, numbers, and dashes)";
         } else if (preg_match('/\A(?:none|any|all|span|default|undefined|unnamed|.*(?:draft|response|review)|(?:draft|response).*|pri(?:mary)|sec(?:ondary)|opt(?:ional)|pc|ext(?:ernal)|meta)\z/i', $rname)) {
-            return "Round name ‘{$rname}’ is reserved";
+            return "Round name '{$rname}' is reserved";
         } else {
             return false;
         }
@@ -2076,7 +2076,7 @@ class Conf {
             $slice -= Contact::SLICEBIT_PREFERREDEMAIL;
         }
 
-        $f = "{$prefix}contactId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, {$prefix}affiliation, {$prefix}roles, {$prefix}primaryContactId, {$prefix}contactTags, {$prefix}cflags";
+        $f = "{$prefix}contactId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, {$prefix}title, {$prefix}affiliation, {$prefix}roles, {$prefix}primaryContactId, {$prefix}contactTags, {$prefix}cflags";
         if (($slice & Contact::SLICEBIT_PREFERREDEMAIL) === 0) {
             $f .= ", {$prefix}preferredEmail";
         }
@@ -2103,7 +2103,7 @@ class Conf {
     function deleted_user_query_fields($prefix = "") {
         // site configuration may require preferredEmail
         $xf = $this->require_preferred_email() ? "null {$prefix}preferredEmail, " : "";
-        return "{$prefix}contactId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, {$prefix}affiliation, 0 roles, 0 primaryContactId, '' contactTags, " . Contact::CF_DELETED . " cflags, {$xf}0 _slice";
+        return "{$prefix}contactId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, null {$prefix}title, {$prefix}affiliation, 0 roles, 0 primaryContactId, '' contactTags, " . Contact::CF_DELETED . " cflags, {$xf}0 _slice";
     }
 
     /** @param int $slice
@@ -2113,7 +2113,7 @@ class Conf {
         if (($slice & Contact::SLICEBIT_REST) === 0) {
             return "{$prefix}*, 0 _slice";
         }
-        $f = "{$prefix}contactDbId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, {$prefix}affiliation, {$prefix}primaryContactId, {$prefix}cflags";
+        $f = "{$prefix}contactDbId, {$prefix}email, {$prefix}firstName, {$prefix}lastName, null {$prefix}title, {$prefix}affiliation, {$prefix}primaryContactId, {$prefix}cflags";
         if (($slice & Contact::SLICEBIT_COLLABORATORS) === 0) {
             $f .= ", {$prefix}collaborators";
         }

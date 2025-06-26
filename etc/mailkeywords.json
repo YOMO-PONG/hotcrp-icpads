@@ -27,6 +27,7 @@
     {"name": "EMAIL", "function": "Mailer::kw_recipient", "userx": "EMAIL"},
     {"name": "FIRST", "function": "Mailer::kw_recipient", "userx": "FIRST"},
     {"name": "LAST", "function": "Mailer::kw_recipient", "userx": "LAST"},
+    {"name": "USERTITLE", "function": "Mailer::kw_recipient", "userx": "TITLE"},
     {"name": "CAPABILITY", "function": "*kw_capability"},
     {"name": "LOGINURL", "function": "*kw_login"},
     {"name": "LOGINURLPARTS", "function": "*kw_login"},

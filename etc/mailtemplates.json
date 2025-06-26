@@ -6,7 +6,7 @@
 			"Greetings,\n\n",
 			"We received a request to create an account for {{EMAIL}} on the {{CONFNAME}} submission site. If you made this request, please use this link to set a password:\n\n",
 			"{{PASSWORDLINK}}\n\n",
-			"If you did not make this request, it’s safe to ignore this email.\n\n",
+			"If you did not make this request, it's safe to ignore this email.\n\n",
 			"The link will work for 3 days. Should it expire, obtain a new link using \"Forgot my password\".\n\n",
 			"Contact {{ADMIN}} with any questions or concerns.\n\n",
 			"{{SIGNATURE}}\n{{LINK}}\n"
@@ -55,7 +55,7 @@
 		"name": "newaccount.pc",
 		"subject": "[{{CONFSHORTNAME}}] Welcome to the program committee",
 		"body": [
-			"Dear {{NAME}},\n\n",
+			"Dear {{IF(USERTITLE)}}{{USERTITLE}} {{ENDIF}}{{NAME}},\n\n",
 			"On behalf of the Technical Program Committee, I would like to sincerely thank you for accepting our invitation to serve on the Program Committee for the 31st IEEE International Conference on Parallel and Distributed Systems（ICPADS 2025）. We are thrilled to have you on board and look forward to your valuable contributions.\n\n",
 			"To get started, you will first need to set up your account on our submission site.\n\n",
 			"1. Activate Your Account\n\n",
@@ -566,7 +566,7 @@
 		"body": [
 			"{{COMMENTS}}\n\n",
 			"***************************************************************************\n\n\n",
-			"You’re following comments for {{CONFNAME}} submission #{{PID}}. For the most up-to-date comments, or to unsubscribe from email notification, see the submission site.\n\n",
+			"You're following comments for {{CONFNAME}} submission #{{PID}}. For the most up-to-date comments, or to unsubscribe from email notification, see the submission site.\n\n",
 			"* Title: {{TITLE}}\n",
 			"* Site: {{LINK(paper, p={{PID}})}}\n\n",
 			"Contact {{ADMIN}} with any questions or concerns.\n\n",
@@ -780,7 +780,7 @@
 		"name": "newaccount.pc.chair",
 		"subject": "[{{CONFSHORTNAME}}] Welcome to the Track Chair Team",
 		"body": [
-			"Dear {{NAME}},\n\n",
+			"Dear {{IF(USERTITLE)}}{{USERTITLE}} {{ENDIF}}{{NAME}},\n\n",
 			"Welcome to the The 31st IEEE International Conference on Parallel and Distributed Systems (ICPADS 2025) Program Committee as a Track Chair!\n\n",
 			"As a Track Chair, you have additional responsibilities in managing your track and guiding the review process.\n\n",
 			"1. Getting Started as Track Chair\n\n",

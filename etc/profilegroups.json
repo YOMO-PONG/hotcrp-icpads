@@ -11,6 +11,7 @@
     },
     {   "name": "__field/firstName", "label": "First name", "page": "main"   },
     {   "name": "__field/lastName", "label": "Last name", "page": "main"   },
+    {   "name": "__field/title", "label": "Title", "page": "main"   },
     {   "name": "__field/email", "label": "Email", "page": "main"   },
     {   "name": "__field/uemail", "label": "Email", "page": "main"   },
     {   "name": "__field/affiliation", "label": "Affiliation", "page": "main"   },
@@ -23,6 +24,7 @@
     },
 
     [   "main/main", 1000, "UserStatus::print_main"   ],
+    [   "main/title", 1500, "UserStatus::print_main_title"   ],
     [   "main/country", 3000, "UserStatus::print_country"   ],
     [   "main/roles", 5000, "UserStatus::print_roles"   ],
     [   "main/collaborators", 6000, "UserStatus::print_collaborators"   ],
@@ -100,6 +102,7 @@
     {   "name": "__bulk/help/f/name", "order": -90, "description_html": "Name"   },
     {   "name": "__bulk/help/f/first", "order": -85, "description_html": "First name (given name)"   },
     {   "name": "__bulk/help/f/last", "order": -84, "description_html": "Last name (family name)"   },
+    {   "name": "__bulk/help/f/title", "order": -83.5, "description_html": "Title (Prof., Dr., Mr., Ms., etc.)"   },
     {   "name": "__bulk/help/f/affiliation", "order": -83, "description_html": "Affiliation"   },
     {   "name": "__bulk/help/f/collaborators", "order": -82, "description_html": "Collaborators"   },
     {   "name": "__bulk/help/f/user_override", "order": -81, "description_html": "If \"<code>yes</code>\", then override existing user profile information (name, affiliation, collaborators)"   },

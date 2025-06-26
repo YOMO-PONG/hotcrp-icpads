@@ -1184,10 +1184,10 @@ class UserStatus extends MessageSet {
     }
 
 
-    /** @param 0|1|2 $ifempty */
     private function set_profile_prop(Contact $user, $ifempty) {
         foreach (["firstName" => "name",
                   "lastName" => "name",
+                  "title" => "title",
                   "affiliation" => "affiliation",
                   "collaborators" => "collaborators",
                   "country" => "country",
@@ -1380,6 +1380,17 @@ class UserStatus extends MessageSet {
                 $cj->$k = $v;
         }
 
+        // title field with special handling for "Other" option
+        if (isset($qreq->title)) {
+            if ($qreq->title === "Other" && isset($qreq->custom_title)) {
+                $cj->title = trim((string) $qreq->custom_title);
+            } else if ($qreq->title !== "") {
+                $cj->title = $qreq->title;
+            } else {
+                $cj->title = null;
+            }
+        }
+
         // follow settings
         $follow = [];
         foreach (self::$follow_keywords as $bit => $names) {
@@ -1449,6 +1460,7 @@ class UserStatus extends MessageSet {
         ["user"],
         ["firstName", "firstname", "first_name", "first", "givenname", "given_name", "given"],
         ["lastName", "lastname", "last_name", "last", "surname", "familyname", "family_name", "family"],
+        ["title"],
         ["name"],
         ["preferred_email", "preferredemail"],
         ["affiliation"],
@@ -1650,6 +1662,60 @@ class UserStatus extends MessageSet {
         $user_country = Countries::fix($us->user->country_code());
         $t = Countries::selector("country", $us->qreq->country ?? $user_country, ["id" => "country", "data-default-value" => $user_country, "autocomplete" => $us->autocomplete("country")]) . $us->global_profile_difference("country");
         $us->print_field("country", "Country/region", $t);
+    }
+
+    static function print_main_title(UserStatus $us) {
+        $title = $us->qreq->title ?? $us->user->title ?? "";
+        $custom_title = $us->qreq->custom_title ?? "";
+        
+        // Predefined titles
+        $predefined_titles = ["Prof.", "Dr.", "Mr.", "Ms."];
+        
+        // Check if current title is one of the predefined ones
+        $is_predefined = in_array($title, $predefined_titles);
+        if (!$is_predefined && !empty($title)) {
+            $custom_title = $title;
+            $title = "Other";
+        }
+        
+        // Build the select options
+        $options = ["" => "None"];
+        foreach ($predefined_titles as $t) {
+            $options[$t] = $t;
+        }
+        $options["Other"] = "Other";
+        
+        // Create the select element
+        $select_html = Ht::select("title", $options, $title, [
+            "id" => "title",
+            "class" => "uich",
+            "data-default-value" => $us->user->title ?? ""
+        ]);
+        
+        // Create the custom input (initially hidden)
+        $custom_input_html = Ht::entry("custom_title", $custom_title, [
+            "id" => "custom_title",
+            "class" => "fullw ml-2",
+            "placeholder" => "Please specify...",
+            "style" => $title === "Other" ? "" : "display: none;",
+            "data-default-value" => ""
+        ]);
+        
+        // Add JavaScript for show/hide functionality
+        $js = '
+        <script>
+        $(function() {
+            $("#title").on("change", function() {
+                if ($(this).val() === "Other") {
+                    $("#custom_title").show().focus();
+                } else {
+                    $("#custom_title").hide().val("");
+                }
+            });
+        });
+        </script>';
+        
+        $us->print_field("title", "Title", $select_html . $custom_input_html . $js . $us->global_profile_difference("title"));
     }
 
     /** @param int $reqwatch

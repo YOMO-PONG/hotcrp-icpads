@@ -69,7 +69,7 @@ class Mailer {
      * @param array{width?:int,censor?:0|1|2,reason?:string,change?:string,adminupdate?:bool,notes?:string,capability_token?:string,sensitive?:bool} $settings */
     function reset($recipient = null, $settings = []) {
         $this->recipient = $recipient;
-        $this->width = $settings["width"] ?? 72;
+        $this->width = $settings["width"] ?? $this->conf->opt("mailWidth") ?? 72;
         if ($this->width <= 0) {
             $this->width = 10000000;
         }
@@ -121,6 +121,12 @@ class Mailer {
             return Text::name($r->firstName, "", "", $flags);
         } else if ($out === "LAST") {
             return Text::name("", $r->lastName, "", $flags);
+        } else if ($out === "TITLE") {
+            // Support for TITLE variable - get title from contact if it's a Contact object
+            if (is_object($contact) && isset($contact->title) && $contact->title !== "") {
+                return $contact->title;
+            }
+            return "";
         } else {
             return "";
         }

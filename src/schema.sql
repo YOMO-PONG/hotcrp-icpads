@@ -73,6 +73,7 @@ CREATE TABLE `ContactInfo` (
   `email` varchar(120) NOT NULL,
   `firstName` varbinary(120) NOT NULL DEFAULT '',
   `lastName` varbinary(120) NOT NULL DEFAULT '',
+  `title` varchar(64) DEFAULT NULL,
   `unaccentedName` varbinary(2048) NOT NULL DEFAULT '',
   `affiliation` varbinary(2048) NOT NULL DEFAULT '',
   `roles` tinyint(1) NOT NULL DEFAULT 0,

@@ -23,13 +23,19 @@ class Users_Page {
         $this->qreq = $qreq;
         $this->papersel = SearchSelection::make($qreq)->selection();
 
+        // Build track name mapping for user-friendly display
+        $trackNameMap = $this->build_track_name_mapping();
+
         $this->limits = [];
         if ($viewer->can_view_pc()) {
             $this->limits["pc"] = "Program committee";
         }
         foreach ($this->conf->viewable_user_tags($viewer) as $t) {
-            if ($t !== "pc")
-                $this->limits["#{$t}"] = ["optgroup" => "PC tags", "label" => "#{$t} program committee"];
+            if ($t !== "pc") {
+                // Enhance PC tag labels with track full names
+                $displayLabel = $this->enhance_pc_tag_label($t, $trackNameMap);
+                $this->limits["#{$t}"] = ["optgroup" => "PC tags", "label" => $displayLabel];
+            }
         }
         if ($viewer->isPC
             && $viewer->can_view_pc()) {
@@ -69,6 +75,63 @@ class Users_Page {
         if ($viewer->privChair) {
             $this->limits["all"] = "Active users";
         }
+    }
+
+
+    /** @return array<string,string> */
+    private function build_track_name_mapping() {
+        // Track display names mapping - can be maintained here or loaded from config
+        $track_display_names = [
+            'cloud-edge' => 'Cloud & Edge Computing',
+            'wsmc' => 'Wireless Sensing & Mobile Computing',
+            'ii-internet' => 'Industrial Informatics & Internet',
+            'infosec' => 'Information Security',
+            'sads' => 'System and Applied Data Science',
+            'big-data-fm' => 'Big Data & Foundation Models',
+            'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
+            'dist-storage' => 'Distributed Storage',
+            'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
+            'rfa' => 'RF Computing and AIoT Application',
+            'dsui' => 'Distributed System and Ubiquitous Intelligence',
+            'wma' => 'Wireless and Mobile AIoT',
+            'bdmls' => 'Big Data and Machine Learning Systems',
+            'ncea' => 'SS:Networked Computing for Embodied AI',
+            'aimc' => 'Artificial Intelligence for Mobile Computing',
+            'idpm' => 'Intelligent Data Processing & Management',
+            'badv' => 'Blockchain & Activation of Data Value',
+            'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
+            'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+        ];
+
+        // Alternative: if tracks are configured with full names in the system
+        // $trackNameMap = [];
+        // if ($this->conf->has_tracks()) {
+        //     foreach ($this->conf->all_tracks() as $track) {
+        //         if ($track->tag && $track->name) {
+        //             $trackNameMap[$track->tag] = $track->name;
+        //         }
+        //     }
+        // }
+        // return array_merge($track_display_names, $trackNameMap);
+
+        return $track_display_names;
+    }
+
+    /** @param string $tag @param array<string,string> $trackNameMap @return string */
+    private function enhance_pc_tag_label($tag, $trackNameMap) {
+        // Parse different tag patterns and enhance with track full names
+        if (preg_match('/^(trackmember|trackchair)-(.+)$/', $tag, $matches)) {
+            $role = $matches[1];
+            $trackShortName = $matches[2];
+            
+            if (isset($trackNameMap[$trackShortName])) {
+                $roleText = ($role === 'trackchair') ? 'Track Chair' : 'Track Member';
+                return "{$roleText}: {$trackNameMap[$trackShortName]}";
+            }
+        }
+        
+        // Fallback for other PC tags or unrecognized track patterns
+        return "#{$tag} program committee";
     }
 
 
@@ -318,7 +381,7 @@ class Users_Page {
         }
         $result->close();
 
-        // that’s it
+        // that's it
         Conf::$no_invalidate_caches = false;
         $this->conf->invalidate_caches(["pc" => true]);
 
@@ -544,7 +607,7 @@ class Users_Page {
 
         // check list type
         if (empty($up->limits)) {
-            Multiconference::fail($qreq, 403, ["title" => "Users"], "<0>You can’t list users for this site");
+            Multiconference::fail($qreq, 403, ["title" => "Users"], "<0>You can't list users for this site");
             return;
         }
         if (!isset($qreq->t) && $qreq->path_component(0)) {
