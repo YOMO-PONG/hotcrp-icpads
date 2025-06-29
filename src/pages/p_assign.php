@@ -627,16 +627,13 @@ class Assign_Page {
             '<div class="review-round-selector">',
             '<label for="review-round-select">Review round:</label>',
             '<select id="review-round-select" class="ml-2">',
-            '<option value="R1">R1 (First round)</option>',
-            '<option value="R2">R2 (Second round)</option>',
+            '<option value="R1">R1 </option>',
+            '<option value="R2">R2 (Assign MetaReviewer)</option>',
             '</select>',
             '</div>',
             '</div>',
             '<div class="flex-container mb-3">',
             '<label class="checki ml-3">',
-            '<input type="checkbox" id="exclude-conflicts" checked="checked" class="js-filter-conflicts">',
-            '<span class="checkc"></span>',
-            'Exclude conflicted reviewers',
             '</label>',
             '</div>';
         
@@ -672,7 +669,7 @@ class Assign_Page {
             '</button>',
             '</div>',
             '<div class="mb-3">',
-            '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name or email..." />',
+            '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name  ..." />',
             '</div>',
             '<div class="pc-ctable has-assignment-set need-assignment-change full-list">';
         
@@ -758,9 +755,9 @@ class Assign_Page {
             Ht::stash_script('$(hotcrp.load_editable_pc_assignments)');
 
             if ($this->conf->has_topics()) {
-                echo "<p>Review preferences display as \"P#\", topic scores as \"T#\".</p>";
+                echo "<p>topic scores as \"T#\",the higher the T, the more interested the reviewer is in the topic.</p>";
             } else {
-                echo "<p>Review preferences display as \"P#\".</p>";
+                echo "<p>Review preferences display as \"P#\",the higher the P, the more interested the reviewer is in the topic.</p>";
             }
 
             // Embed reviewer data and paper track for JavaScript

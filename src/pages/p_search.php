@@ -109,6 +109,11 @@ class Search_Page {
         if ($user->can_view_some_review_identity()) {
             $this->checkbox_item(20, "reviewers", "Reviewers");
         }
+        
+        // Metareviewer group
+        if ($user->can_view_some_review_identity()) {
+            $this->checkbox_item(20, "metareviewer", "Metareviewer");
+        }
 
         // Tags group
         if ($user->isPC && $pl->has("tags")) {
@@ -448,7 +453,7 @@ class Search_Page {
         // paper group
         if (!PaperSearch::viewable_limits($user, $qreq->t)) {
             $qreq->print_header("Search", "search");
-            $conf->error_msg($conf->_("<0>You aren’t allowed to search {submissions}"));
+            $conf->error_msg($conf->_("<0>You aren't allowed to search {submissions}"));
             $qreq->print_footer();
             exit(0);
         }

@@ -299,6 +299,14 @@
         "order": 1700
     },
     {
+        "name": "metareviewer", "title": "Metareviewer",
+        "sort": true, "completion": true,
+        "function": "+Metareviewer_PaperColumn",
+        "order": 1750
+    },
+    {   "name": "metareview", "alias": "metareviewer"   },
+    {   "name": "meta", "alias": "metareviewer"   },
+    {
         "name": "commenters", "title": "Commenters",
         "prefer_row": true, "completion": true, "function": "+Commenters_PaperColumn",
         "order": 2000
