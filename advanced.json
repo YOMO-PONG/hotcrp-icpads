@@ -1,0 +1,1744 @@
+{
+    "accepted_author_visibility": true,
+    "author_visibility": "open",
+    "autoassign_review_max_load_tag": "",
+    "autoassign_review_preference_gadget": "default",
+    "automatic_tag": [
+        {
+            "tag": "aigc-mapc",
+            "search": "Track:\"AIGC & Multi-Agent Parallel Computing\"",
+            "value": ""
+        },
+        {
+            "tag": "aimc",
+            "search": "Track:\"Artificial Intelligence for Mobile Computing\"",
+            "value": ""
+        },
+        {
+            "tag": "badv",
+            "search": "Track:\"Blockchain & Activation of Data Value\"",
+            "value": ""
+        },
+        {
+            "tag": "bdmls",
+            "search": "Track:\"Big Data and Machine Learning Systems\"",
+            "value": ""
+        },
+        {
+            "tag": "big-data-fm",
+            "search": "Track:\"Big Data & Foundation Models\"",
+            "value": ""
+        },
+        {
+            "tag": "cloud-edge",
+            "search": "Track:\"Cloud & Edge Computing\"",
+            "value": ""
+        },
+        {
+            "tag": "dist-storage",
+            "search": "Track:\"Distributed Storage\"",
+            "value": ""
+        },
+        {
+            "tag": "dsui",
+            "search": "Track:\"Distributed System and Ubiquitous Intelligence\"",
+            "value": ""
+        },
+        {
+            "tag": "idpm",
+            "search": "Track:\"Intelligent Data Processing & Management\"",
+            "value": ""
+        },
+        {
+            "tag": "idsia",
+            "search": "Track:\"Interdisciplinary Distributed System and IoT Applications\"",
+            "value": ""
+        },
+        {
+            "tag": "ii-internet",
+            "search": "Track:\"Industrial Informatics & Internet\"",
+            "value": ""
+        },
+        {
+            "tag": "infosec",
+            "search": "Track:\"Information Security\"",
+            "value": ""
+        },
+        {
+            "tag": "mwt",
+            "search": "Track:\"SS:Millimeter-Wave and Terahertz Sensing and Networks\"",
+            "value": ""
+        },
+        {
+            "tag": "ncea",
+            "search": "Track:\"SS:Networked Computing for Embodied AI\"",
+            "value": ""
+        },
+        {
+            "tag": "ngm",
+            "search": "Track:\"Next-Generation Mobile Networks and Connected Systems\"",
+            "value": ""
+        },
+        {
+            "tag": "rfa",
+            "search": "Track:\"RF Computing and AIoT Application\"",
+            "value": ""
+        },
+        {
+            "tag": "sads",
+            "search": "Track:\"System and Applied Data Science\"",
+            "value": ""
+        },
+        {
+            "tag": "wma",
+            "search": "Track:\"Wireless and Mobile AIoT\"",
+            "value": ""
+        },
+        {
+            "tag": "wsmc",
+            "search": "Track:\"Wireless Sensing & Mobile Computing\"",
+            "value": ""
+        }
+    ],
+    "badge": [
+        {
+            "style": "red",
+            "tags": ""
+        },
+        {
+            "style": "orange",
+            "tags": ""
+        },
+        {
+            "style": "yellow",
+            "tags": ""
+        },
+        {
+            "style": "green",
+            "tags": ""
+        },
+        {
+            "style": "blue",
+            "tags": ""
+        },
+        {
+            "style": "purple",
+            "tags": ""
+        },
+        {
+            "style": "gray",
+            "tags": ""
+        },
+        {
+            "style": "white",
+            "tags": ""
+        },
+        {
+            "style": "black",
+            "tags": ""
+        },
+        {
+            "style": "pink",
+            "tags": ""
+        }
+    ],
+    "comment_allow_always": false,
+    "comment_author": true,
+    "comment_author_initiate": true,
+    "comment_visibility_reviewer": "if_reviewers_visible",
+    "conference_abbreviation": "ICPADS 2025",
+    "conference_name": "The 31st IEEE International Conference on Parallel and Distributed Systems",
+    "conference_url": "http:\/\/ieee-icpads.org.cn\/",
+    "conflict_description": "This includes past advisors and students, people with the same affiliation, and any recent (~2 years) coauthors and collaborators.",
+    "conflict_visibility": "if_authors_visible",
+    "decision": [
+        {
+            "id": 1,
+            "name": "Accepted",
+            "category": "accept"
+        },
+        {
+            "id": -1,
+            "name": "Rejected",
+            "category": "reject"
+        },
+        {
+            "id": -2,
+            "name": "CA",
+            "category": "maybe"
+        }
+    ],
+    "decision_visibility_author": "yes",
+    "decision_visibility_author_condition": "",
+    "decision_visibility_reviewer": "yes",
+    "draft_submission_early_visibility": false,
+    "email_default_cc": "",
+    "email_default_reply_to": "",
+    "final_done": "",
+    "final_edit_message": "Congratulations! The paper has been accepted. Update the paper's final version here. {deadline} You may also edit paper contacts, allowing others to view reviews and make changes.",
+    "final_open": false,
+    "final_soft": "",
+    "format": [],
+    "home_message": "",
+    "mailbody_requestreview": "",
+    "named_search": [],
+    "pc_warn_bulk_download": false,
+    "preference_instructions": "<p>A review preference is a small integer that indicates how much you want to review a submission. Positive numbers mean you want to review, negative numbers mean you don’t, and −100 means you think you have a conflict. −20 to 20 is a typical range for real preferences; multiple submissions can have the same preference. The automatic assignment algorithm attempts to assign reviews in descending preference order, using topic scores to break ties. Different users’ preference values are not compared and need not use the same scale.<\/p>\n\n<p>The list shows all submissions and their topics (<span class=\"topic4\">high interest topics<\/span>, <span class=\"topic-2\">low interest topics<\/span>). “Topic score” summarizes your interest in the submission’s topics. Select a column heading to sort by that column. Enter preferences in the text boxes or on the paper pages. You may also upload preferences from a text file; see the “Download” and “Upload” links below the paper list.<\/p>",
+    "preference_max": 1000000,
+    "preference_min": -1000000,
+    "response": [
+        {
+            "id": 1,
+            "name": "",
+            "open": "",
+            "done": "",
+            "grace": 0,
+            "condition": "all",
+            "wordlimit": 500,
+            "hard_wordlimit": 0,
+            "instructions": "The authors' response should address reviewer concerns and correct misunderstandings. Make it short and to the point; the conference deadline has passed. Try to stay within {wordlimit} words."
+        }
+    ],
+    "response_active": false,
+    "review": [
+        {
+            "id": 2,
+            "name": "R1",
+            "soft": "",
+            "done": "",
+            "external_soft": "",
+            "external_done": ""
+        },
+        {
+            "id": 3,
+            "name": "R2",
+            "soft": "",
+            "done": "",
+            "external_soft": "",
+            "external_done": ""
+        }
+    ],
+    "review_blind": "blind",
+    "review_default_external_round": "R1",
+    "review_default_round": "R1",
+    "review_identity_visibility_external": "after_review",
+    "review_identity_visibility_pc": "never",
+    "review_open": true,
+    "review_proposal": "approval_required_potential_conflict",
+    "review_proposal_editable": "no",
+    "review_rating": "pc",
+    "review_self_assign": true,
+    "review_terms": "",
+    "review_visibility_author": "yes",
+    "review_visibility_author_condition": "",
+    "review_visibility_external": "after_review",
+    "review_visibility_lead": true,
+    "review_visibility_pc": "after_review",
+    "rf": [
+        {
+            "id": "t01",
+            "name": "Paper summary",
+            "order": 1,
+            "type": "text",
+            "description": "",
+            "required": false,
+            "visibility": "au",
+            "condition": "round:R1"
+        },
+        {
+            "id": "t04",
+            "name": "Strengths",
+            "order": 2,
+            "type": "text",
+            "description": "What are the paper's important strengths? Just a couple sentences, please.",
+            "required": false,
+            "visibility": "au",
+            "condition": "round:R1"
+        },
+        {
+            "id": "t03",
+            "name": "MetaReview",
+            "order": 3,
+            "type": "text",
+            "description": "",
+            "required": false,
+            "visibility": "re",
+            "condition": "round:R2"
+        },
+        {
+            "id": "s03",
+            "name": "recommendation",
+            "order": 4,
+            "type": "radio",
+            "description": "",
+            "required": true,
+            "visibility": "au",
+            "condition": "round:R2",
+            "values": [
+                {
+                    "id": 2,
+                    "symbol": 1,
+                    "name": "Accept",
+                    "order": 1
+                },
+                {
+                    "id": 3,
+                    "symbol": 2,
+                    "name": "CA",
+                    "order": 2
+                },
+                {
+                    "id": 1,
+                    "symbol": 3,
+                    "name": "Reject",
+                    "order": 3
+                }
+            ],
+            "scheme": "svr"
+        },
+        {
+            "id": "t05",
+            "name": "Weaknesses",
+            "order": 5,
+            "type": "text",
+            "description": "What are the paper’s important weaknesses? Just a couple sentences, please.",
+            "required": false,
+            "visibility": "re",
+            "condition": "round:R1"
+        },
+        {
+            "id": "s01",
+            "name": "Overall merit",
+            "order": 6,
+            "type": "radio",
+            "description": "",
+            "required": true,
+            "visibility": "au",
+            "condition": "round:R1",
+            "values": [
+                {
+                    "id": 1,
+                    "symbol": 1,
+                    "name": "Reject",
+                    "order": 1
+                },
+                {
+                    "id": 2,
+                    "symbol": 2,
+                    "name": "Weak reject",
+                    "order": 2
+                },
+                {
+                    "id": 3,
+                    "symbol": 3,
+                    "name": "Weak accept",
+                    "order": 3
+                },
+                {
+                    "id": 4,
+                    "symbol": 4,
+                    "name": "Accept",
+                    "order": 4
+                },
+                {
+                    "id": 5,
+                    "symbol": 5,
+                    "name": "Strong accept",
+                    "order": 5
+                }
+            ],
+            "scheme": "sv"
+        },
+        {
+            "id": "s02",
+            "name": "Reviewer expertise",
+            "order": 7,
+            "type": "radio",
+            "description": "",
+            "required": true,
+            "visibility": "au",
+            "condition": "round:R1",
+            "values": [
+                {
+                    "id": 1,
+                    "symbol": 1,
+                    "name": "No familiarity",
+                    "order": 1
+                },
+                {
+                    "id": 2,
+                    "symbol": 2,
+                    "name": "Some familiarity",
+                    "order": 2
+                },
+                {
+                    "id": 3,
+                    "symbol": 3,
+                    "name": "Knowledgeable",
+                    "order": 3
+                },
+                {
+                    "id": 4,
+                    "symbol": 4,
+                    "name": "Expert",
+                    "order": 4
+                }
+            ],
+            "scheme": "sv"
+        },
+        {
+            "id": "t02",
+            "name": "Comments for authors",
+            "order": 8,
+            "type": "text",
+            "description": "",
+            "required": false,
+            "visibility": "au",
+            "condition": "round:R1"
+        }
+    ],
+    "sf": [
+        {
+            "id": "title",
+            "name": "Title",
+            "description": "",
+            "edit_condition": true
+        },
+        {
+            "id": "submission",
+            "order": 2,
+            "name": "Submission",
+            "description": "",
+            "condition": true,
+            "edit_condition": true,
+            "required": "submit"
+        },
+        {
+            "id": "final",
+            "order": 3,
+            "name": "Final version",
+            "description": "",
+            "condition": "phase:final",
+            "edit_condition": true,
+            "required": "submit"
+        },
+        {
+            "id": "abstract",
+            "order": 4,
+            "name": "Abstract",
+            "description": "",
+            "condition": true,
+            "edit_condition": true,
+            "required": "register"
+        },
+        {
+            "id": "authors",
+            "order": 5,
+            "name": "Authors",
+            "description": "List the authors, including email addresses and affiliations.",
+            "edit_condition": true,
+            "max": 0
+        },
+        {
+            "id": "pc_conflicts",
+            "order": 6,
+            "name": "PC conflicts"
+        },
+        {
+            "id": "collaborators",
+            "order": 7,
+            "name": "Other conflicts",
+            "description": "<p>List other people and institutions with which the authors have conflicts of interest. We use this information when assigning external reviews. Collaborators declared on the authors' HotCRP profiles need not be repeated here.<\/p><p><strong>Enter one conflict per line.<\/strong> Use parentheses for affiliations and institutions. Examples: “Jelena Markovic (EPFL)”, “All (University of Southern California)”.<\/p>"
+        },
+        {
+            "id": 1,
+            "name": "Track",
+            "order": 8,
+            "type": "dropdown",
+            "description": "select track",
+            "values": [
+                {
+                    "id": 1,
+                    "name": "Cloud & Edge Computing",
+                    "order": 1
+                },
+                {
+                    "id": 5,
+                    "name": "Wireless Sensing & Mobile Computing",
+                    "order": 2
+                },
+                {
+                    "id": 2,
+                    "name": "Industrial Informatics & Internet",
+                    "order": 3
+                },
+                {
+                    "id": 3,
+                    "name": "Information Security",
+                    "order": 4
+                },
+                {
+                    "id": 4,
+                    "name": "System and Applied Data Science",
+                    "order": 5
+                },
+                {
+                    "id": 6,
+                    "name": "Big Data & Foundation Models",
+                    "order": 6
+                },
+                {
+                    "id": 7,
+                    "name": "AIGC & Multi-Agent Parallel Computing",
+                    "order": 7
+                },
+                {
+                    "id": 8,
+                    "name": "Distributed Storage",
+                    "order": 8
+                },
+                {
+                    "id": 9,
+                    "name": "Next-Generation Mobile Networks and Connected Systems",
+                    "order": 9
+                },
+                {
+                    "id": 10,
+                    "name": "RF Computing and AIoT Application",
+                    "order": 10
+                },
+                {
+                    "id": 11,
+                    "name": "Distributed System and Ubiquitous Intelligence",
+                    "order": 11
+                },
+                {
+                    "id": 12,
+                    "name": "Wireless and Mobile AIoT",
+                    "order": 12
+                },
+                {
+                    "id": 13,
+                    "name": "Big Data and Machine Learning Systems",
+                    "order": 13
+                },
+                {
+                    "id": 15,
+                    "name": "Artificial Intelligence for Mobile Computing",
+                    "order": 14
+                },
+                {
+                    "id": 16,
+                    "name": "Intelligent Data Processing & Management",
+                    "order": 15
+                },
+                {
+                    "id": 17,
+                    "name": "Blockchain & Activation of Data Value",
+                    "order": 16
+                },
+                {
+                    "id": 19,
+                    "name": "Interdisciplinary Distributed System and IoT Applications",
+                    "order": 17
+                },
+                {
+                    "id": 14,
+                    "name": "SS:Millimeter-Wave and Terahertz Sensing and Networks",
+                    "order": 18
+                },
+                {
+                    "id": 18,
+                    "name": "SS:Networked Computing for Embodied AI",
+                    "order": 19
+                }
+            ],
+            "required": "register",
+            "display": "rest",
+            "visibility": "all",
+            "condition": true,
+            "edit_condition": true
+        },
+        {
+            "id": 3,
+            "name": "poster",
+            "order": 9,
+            "type": "document",
+            "description": "",
+            "required": "register",
+            "display": "right",
+            "visibility": "all",
+            "condition": "#poster",
+            "edit_condition": true
+        },
+        {
+            "id": "topics",
+            "order": 10,
+            "name": "Topics",
+            "description": "Select at least one topic that applies to your submission.",
+            "condition": true,
+            "edit_condition": true,
+            "required": "register",
+            "min": 1,
+            "max": 0
+        }
+    ],
+    "sf_collaborators": false,
+    "sf_pc_conflicts": true,
+    "sf_pc_conflict_types": false,
+    "shepherd_visibility": true,
+    "site_contact_email": "tpc-chairs@ieee-icpads.org.cn",
+    "site_contact_name": "Technical Program Committee",
+    "submission": [
+        {
+            "tag": "poster",
+            "open": true,
+            "registration": "",
+            "done": ""
+        }
+    ],
+    "submission_done": "",
+    "submission_edit_message": "",
+    "submission_freeze": false,
+    "submission_open": true,
+    "submission_registration": "",
+    "submission_terms": "",
+    "submitted_document_early_visibility": false,
+    "tag_hidden": "",
+    "tag_rank": "",
+    "tag_readonly": "accept pcpaper poster reject",
+    "tag_sitewide": "",
+    "tag_style": [
+        {
+            "style": "red",
+            "tags": ""
+        },
+        {
+            "style": "orange",
+            "tags": ""
+        },
+        {
+            "style": "yellow",
+            "tags": ""
+        },
+        {
+            "style": "green",
+            "tags": ""
+        },
+        {
+            "style": "blue",
+            "tags": ""
+        },
+        {
+            "style": "purple",
+            "tags": ""
+        },
+        {
+            "style": "gray",
+            "tags": ""
+        },
+        {
+            "style": "white",
+            "tags": ""
+        },
+        {
+            "style": "bold",
+            "tags": ""
+        },
+        {
+            "style": "italic",
+            "tags": ""
+        },
+        {
+            "style": "underline",
+            "tags": ""
+        },
+        {
+            "style": "strikethrough",
+            "tags": ""
+        },
+        {
+            "style": "big",
+            "tags": ""
+        },
+        {
+            "style": "small",
+            "tags": ""
+        },
+        {
+            "style": "dim",
+            "tags": ""
+        }
+    ],
+    "tag_visibility_conflict": false,
+    "tag_vote_allotment": "",
+    "tag_vote_approval": "",
+    "topic": [
+        {
+            "id": 152,
+            "name": "6G and next-gen RF communication for AloT systems"
+        },
+        {
+            "id": 50,
+            "name": "Acoustic\/optical sensing for mobile devices"
+        },
+        {
+            "id": 90,
+            "name": "Advanced persistent threats (APT) detection and mitigation"
+        },
+        {
+            "id": 197,
+            "name": "AI for Database Systems"
+        },
+        {
+            "id": 126,
+            "name": "AI for Storage"
+        },
+        {
+            "id": 135,
+            "name": "AI\/ML-driven mobile network optimization and control"
+        },
+        {
+            "id": 237,
+            "name": "Al and Machine Learning in loT: Intelligent decision-making in distributed loT systems"
+        },
+        {
+            "id": 153,
+            "name": "Al-optimized RF signal processing for IoT networks"
+        },
+        {
+            "id": 170,
+            "name": "Algorithms for big data"
+        },
+        {
+            "id": 163,
+            "name": "AloT systems and applications in Smart Cities, Industries, Healthcare, etc."
+        },
+        {
+            "id": 134,
+            "name": "Architectures for 5G-Advanced, 6G, and beyond"
+        },
+        {
+            "id": 74,
+            "name": "Artificial intelligence in cybersecurity"
+        },
+        {
+            "id": 106,
+            "name": "Augmented decision support in industrial and critical infrastructures"
+        },
+        {
+            "id": 160,
+            "name": "Autonomic & Adaptive Systems"
+        },
+        {
+            "id": 103,
+            "name": "Autonomous systems: robotics, drones, and self-driving vehicles"
+        },
+        {
+            "id": 56,
+            "name": "Backscatter and ambient RF sensing"
+        },
+        {
+            "id": 147,
+            "name": "Backscatter communication, reconfigurable intelligence surface (RIS), and battery-free design"
+        },
+        {
+            "id": 171,
+            "name": "Big data analytics and applications"
+        },
+        {
+            "id": 107,
+            "name": "Big Data Analytics and Machine Learning"
+        },
+        {
+            "id": 109,
+            "name": "Big Data for Large Language Models"
+        },
+        {
+            "id": 172,
+            "name": "Big data security and privacy"
+        },
+        {
+            "id": 113,
+            "name": "Big Data Security and Trust Management"
+        },
+        {
+            "id": 73,
+            "name": "Blockchain and distributed ledger technologies for security"
+        },
+        {
+            "id": 208,
+            "name": "Blockchain security and privacy"
+        },
+        {
+            "id": 212,
+            "name": "Blockchain-based data circulation"
+        },
+        {
+            "id": 207,
+            "name": "Blockchain-based data trading\/exchanging"
+        },
+        {
+            "id": 210,
+            "name": "Blockchain-based decentralized identity"
+        },
+        {
+            "id": 209,
+            "name": "Blockchain-based large Al model sharing and tracing"
+        },
+        {
+            "id": 40,
+            "name": "Cloud and edge computing algorithm design"
+        },
+        {
+            "id": 45,
+            "name": "Cloud and edge infrastructure management"
+        },
+        {
+            "id": 127,
+            "name": "Cloud and Edge Storage"
+        },
+        {
+            "id": 42,
+            "name": "Cloud computing security"
+        },
+        {
+            "id": 198,
+            "name": "Cloud Data Management"
+        },
+        {
+            "id": 44,
+            "name": "Cloud programming models and tools"
+        },
+        {
+            "id": 149,
+            "name": "Cognitive radio and spectrum sharing in AloT systems"
+        },
+        {
+            "id": 185,
+            "name": "Collaborative edge\/cloud computing architectures and methodologies"
+        },
+        {
+            "id": 122,
+            "name": "Collaborative task execution in embodied agent swarms (e.g., multi-robot systems)"
+        },
+        {
+            "id": 130,
+            "name": "Computational Storage Architectures, Systems and Applications"
+        },
+        {
+            "id": 194,
+            "name": "Context-aware LLM applications for mobile computing systems"
+        },
+        {
+            "id": 112,
+            "name": "Cross-Domain Data Integration and Governance"
+        },
+        {
+            "id": 139,
+            "name": "Cross-layer design for ultra-reliable low-latency communications (URLLC)"
+        },
+        {
+            "id": 173,
+            "name": "Crowd\/social\/multi-modal sensing and computing systems"
+        },
+        {
+            "id": 72,
+            "name": "Cryptography and encryption techniques"
+        },
+        {
+            "id": 97,
+            "name": "Cyber-physical social systems and human-in-the-loop analytics"
+        },
+        {
+            "id": 65,
+            "name": "Cyber-Physical Systems and Digital Twins"
+        },
+        {
+            "id": 71,
+            "name": "Cybersecurity and cyberattack detection"
+        },
+        {
+            "id": 86,
+            "name": "Cybersecurity for autonomous systems"
+        },
+        {
+            "id": 79,
+            "name": "Cybersecurity in smart cities and critical infrastructure"
+        },
+        {
+            "id": 93,
+            "name": "Cybersecurity incident response and recovery"
+        },
+        {
+            "id": 199,
+            "name": "Data Mining and Knowledge Discovery"
+        },
+        {
+            "id": 202,
+            "name": "Data Stream Systems and Edge Computing"
+        },
+        {
+            "id": 102,
+            "name": "Data-driven security, privacy, and trust in interconnected systems"
+        },
+        {
+            "id": 200,
+            "name": "Database Security and Privacy"
+        },
+        {
+            "id": 201,
+            "name": "Database technology for AI"
+        },
+        {
+            "id": 52,
+            "name": "Deep learning for signal processing in sensing"
+        },
+        {
+            "id": 46,
+            "name": "Deploying large-scale analytics"
+        },
+        {
+            "id": 158,
+            "name": "Device-Edge-Cloud Orchestration for Ubiquitous Intelligence"
+        },
+        {
+            "id": 83,
+            "name": "Digital identity management and authentication"
+        },
+        {
+            "id": 105,
+            "name": "Digital twins, simulation, and model-based system engineering"
+        },
+        {
+            "id": 157,
+            "name": "Distributed Al\/ML Systems"
+        },
+        {
+            "id": 175,
+            "name": "Distributed and federated machine learning systems"
+        },
+        {
+            "id": 108,
+            "name": "Distributed and Parallel Algorithms for Big Data"
+        },
+        {
+            "id": 203,
+            "name": "Distributed and Parallel Data Management"
+        },
+        {
+            "id": 174,
+            "name": "Distributed autonomous robotic systems"
+        },
+        {
+            "id": 176,
+            "name": "Distributed LLM design"
+        },
+        {
+            "id": 231,
+            "name": "Distributed Systems and IoT for Healthcare and Human-centered Sensing Applications"
+        },
+        {
+            "id": 233,
+            "name": "Distributed systems and IoT for Smart Cities: urban planning, transportation, and environmental monitoring"
+        },
+        {
+            "id": 118,
+            "name": "Distributed training\/inference optimization for large generative models"
+        },
+        {
+            "id": 123,
+            "name": "Distributed trust verification in multi-agent systems"
+        },
+        {
+            "id": 129,
+            "name": "DNA Storage"
+        },
+        {
+            "id": 235,
+            "name": "Edge Computing for IoT Applications: Resource allocation, scalability, and security in edge environments"
+        },
+        {
+            "id": 41,
+            "name": "Edge Intelligence applications"
+        },
+        {
+            "id": 58,
+            "name": "Edge intelligence for mobile applications"
+        },
+        {
+            "id": 179,
+            "name": "Edge-Cloud Continuum for Embodied Al"
+        },
+        {
+            "id": 145,
+            "name": "Efficient wireless sensing, communication, and protocols for AloT applications"
+        },
+        {
+            "id": 138,
+            "name": "Emerging mobile applications (AR\/VR, Smart city, etc.)"
+        },
+        {
+            "id": 190,
+            "name": "Energy and resource management in mobile Al deployment"
+        },
+        {
+            "id": 104,
+            "name": "Energy-efficient and green system design for data-intensive workloads"
+        },
+        {
+            "id": 236,
+            "name": "Energy-efficient Distributed Systems: Power-saving algorithms and sustainable loT deployments"
+        },
+        {
+            "id": 141,
+            "name": "Energy-efficient mobile systems and hardware acceleration"
+        },
+        {
+            "id": 143,
+            "name": "Experimental testbeds, measurement, and real-world evaluations"
+        },
+        {
+            "id": 101,
+            "name": "Federated and distributed learning for resource-constrained platforms"
+        },
+        {
+            "id": 111,
+            "name": "Federated Learning and Privacy-preserving Big Data Analytics"
+        },
+        {
+            "id": 195,
+            "name": "Generative Al and LLM for mobile sensing data analysis"
+        },
+        {
+            "id": 128,
+            "name": "Green Storage"
+        },
+        {
+            "id": 132,
+            "name": "Hardware-Software Collaborative Storage Optimization Technologies"
+        },
+        {
+            "id": 196,
+            "name": "Human and Al collaboration for mobile computing systems"
+        },
+        {
+            "id": 91,
+            "name": "Human factors and social engineering in cybersecurity"
+        },
+        {
+            "id": 68,
+            "name": "Human–Machine Interaction in Intelligent Environments"
+        },
+        {
+            "id": 226,
+            "name": "Implantable and wearable mmWave\/THz computing"
+        },
+        {
+            "id": 64,
+            "name": "Industrial Internet of Things (IIoT) and Edge Computing"
+        },
+        {
+            "id": 180,
+            "name": "Integrated computation and network architecture"
+        },
+        {
+            "id": 140,
+            "name": "Integrated sensing and communication"
+        },
+        {
+            "id": 55,
+            "name": "Integrated sensing and communication (ISAC)"
+        },
+        {
+            "id": 230,
+            "name": "Integrated sensing and communication in the mmWave and THz bands"
+        },
+        {
+            "id": 96,
+            "name": "Intelligent cyber-physical systems and real-time control"
+        },
+        {
+            "id": 181,
+            "name": "Intelligent embodied Al systems"
+        },
+        {
+            "id": 76,
+            "name": "Internet of things (IoT) security"
+        },
+        {
+            "id": 98,
+            "name": "Internet of Things (IoT): sensing, communication, and management"
+        },
+        {
+            "id": 232,
+            "name": "Interoperability in IoT Systems: Standardization, middleware solutions, and communication protocols"
+        },
+        {
+            "id": 156,
+            "name": "IoT Standardization and interoperability application in AloT systems"
+        },
+        {
+            "id": 234,
+            "name": "IoT-enabled Distributed Architectures: Design, deployment, and optimization of distributed IoT systems"
+        },
+        {
+            "id": 125,
+            "name": "Large Model Storage"
+        },
+        {
+            "id": 116,
+            "name": "Large-Scale Model Training and Deployment"
+        },
+        {
+            "id": 167,
+            "name": "Learning algorithms \/ models for perception, understanding, and adaptation"
+        },
+        {
+            "id": 60,
+            "name": "LLM-assisted edge computing"
+        },
+        {
+            "id": 53,
+            "name": "LLM-driven adaptive sensing & context awareness"
+        },
+        {
+            "id": 177,
+            "name": "LLMs for parallel and distributed systems"
+        },
+        {
+            "id": 183,
+            "name": "loT, mobile and embedded architectures"
+        },
+        {
+            "id": 154,
+            "name": "Low-altitude unmanned aerial vehicle sensing and safety"
+        },
+        {
+            "id": 51,
+            "name": "Low-power and energy-efficient sensing"
+        },
+        {
+            "id": 178,
+            "name": "Machine learning for autonomous vehicles"
+        },
+        {
+            "id": 82,
+            "name": "Malware analysis and forensics"
+        },
+        {
+            "id": 227,
+            "name": "Medical applications of mmWave and THz sensing systems"
+        },
+        {
+            "id": 213,
+            "name": "MmWave and THz research platforms and testbed development"
+        },
+        {
+            "id": 216,
+            "name": "MmWave\/THz environmental monitoring"
+        },
+        {
+            "id": 215,
+            "name": "MmWave\/THz health monitoring"
+        },
+        {
+            "id": 219,
+            "name": "MmWave\/THz sensing for smart city applications"
+        },
+        {
+            "id": 166,
+            "name": "Mobile \/ Ubiquitous \/ Wearable computing"
+        },
+        {
+            "id": 99,
+            "name": "Mobile, embedded, and edge computing architectures"
+        },
+        {
+            "id": 63,
+            "name": "Model–Context–Protocol (MCP) Frameworks"
+        },
+        {
+            "id": 144,
+            "name": "Modeling and computing theories for radio frequency (RF) computing"
+        },
+        {
+            "id": 62,
+            "name": "Multi-Agent Collaboration in Industrial Systems"
+        },
+        {
+            "id": 164,
+            "name": "Multimodal (6G, Wi-Fi, millimeter-wave, UWB, ultrasound, RFID, etc.) systems for context sensing and location estimation"
+        },
+        {
+            "id": 61,
+            "name": "Multimodal Large Models for Industrial Applications"
+        },
+        {
+            "id": 182,
+            "name": "Network aware Al models and applications"
+        },
+        {
+            "id": 84,
+            "name": "Network security and intrusion detection systems"
+        },
+        {
+            "id": 165,
+            "name": "New platforms and communication paradigms for sensor networks"
+        },
+        {
+            "id": 133,
+            "name": "Non-Volatile Memory Architectures and Systems"
+        },
+        {
+            "id": 188,
+            "name": "Novel applications of agentic artificial intelligence for mobile computing systems"
+        },
+        {
+            "id": 189,
+            "name": "Novel applications of embodied Al for mobile computing systems"
+        },
+        {
+            "id": 205,
+            "name": "Novel blockchain consensus"
+        },
+        {
+            "id": 204,
+            "name": "Novel blockchain mechanisms, framework, and implementations"
+        },
+        {
+            "id": 193,
+            "name": "Novel mobile computing applications and systems with artificial intelligence"
+        },
+        {
+            "id": 168,
+            "name": "Novel smart \/ mobile applications using machine \/ deep learning"
+        },
+        {
+            "id": 187,
+            "name": "Novel uses of generative artificial intelligence and Large Language Models for mobile computing systems"
+        },
+        {
+            "id": 223,
+            "name": "Object and vehicle detection, localization and tracking using mmWave and THz sensing"
+        },
+        {
+            "id": 137,
+            "name": "Open RAN (O-RAN) and programmable radio access networks"
+        },
+        {
+            "id": 119,
+            "name": "Parallel decision-making and communication in large-scale agent collectives"
+        },
+        {
+            "id": 120,
+            "name": "Parallel perception-decision-action architectures for embodied agents"
+        },
+        {
+            "id": 85,
+            "name": "Penetration testing and ethical hacking"
+        },
+        {
+            "id": 47,
+            "name": "Performance and scalability for cloud and edge"
+        },
+        {
+            "id": 43,
+            "name": "Performance modeling and analysis of parallel or distributed computing"
+        },
+        {
+            "id": 121,
+            "name": "Physical scene understanding and action simulation using multimodal generative models"
+        },
+        {
+            "id": 191,
+            "name": "Privacy considerations in mobile Al implementations"
+        },
+        {
+            "id": 59,
+            "name": "Privacy-preserving mobile\/edge computing"
+        },
+        {
+            "id": 77,
+            "name": "Privacy-preserving technologies and techniques"
+        },
+        {
+            "id": 229,
+            "name": "RADAR, imaging systems and techniques for mmWave and THz"
+        },
+        {
+            "id": 110,
+            "name": "Real-Time and Streaming Data Processing"
+        },
+        {
+            "id": 124,
+            "name": "Real-time physical simulation and generation in industrial metaverses"
+        },
+        {
+            "id": 57,
+            "name": "Reconfigurable intelligent surfaces (RIS)"
+        },
+        {
+            "id": 150,
+            "name": "Resource-efficient machine learning on IoT devices"
+        },
+        {
+            "id": 49,
+            "name": "RF-based sensing (Wi-Fi, mmWave, RFID, UWB)"
+        },
+        {
+            "id": 148,
+            "name": "RF-centric energy harvesting and management methods and systems"
+        },
+        {
+            "id": 155,
+            "name": "RF-enabled AloT for industrial automation, smart homes, UAVs, autonomous systems, and healthcare"
+        },
+        {
+            "id": 78,
+            "name": "Risk management and cybersecurity governance"
+        },
+        {
+            "id": 100,
+            "name": "Scalable data processing and distributed analytics frameworks"
+        },
+        {
+            "id": 114,
+            "name": "Scalable Infrastructure and Storage Systems"
+        },
+        {
+            "id": 67,
+            "name": "Secure Communication and Protocols for Industrial Networks"
+        },
+        {
+            "id": 89,
+            "name": "Secure mobile computing and applications"
+        },
+        {
+            "id": 80,
+            "name": "Secure software development lifecycle"
+        },
+        {
+            "id": 169,
+            "name": "Security and privacy in smart \/ mobile applications and systems"
+        },
+        {
+            "id": 151,
+            "name": "Security and reliability for AloT applications"
+        },
+        {
+            "id": 94,
+            "name": "Security and safety for GenAI"
+        },
+        {
+            "id": 81,
+            "name": "Security in 6G and next-generation network"
+        },
+        {
+            "id": 92,
+            "name": "Security in artificial intelligence and machine learning systems"
+        },
+        {
+            "id": 87,
+            "name": "Security in big data and analytics"
+        },
+        {
+            "id": 75,
+            "name": "Security in cloud computing"
+        },
+        {
+            "id": 88,
+            "name": "Security in DevOps and continuous integration"
+        },
+        {
+            "id": 142,
+            "name": "Security, privacy, and trust in mobile networks"
+        },
+        {
+            "id": 95,
+            "name": "Smart city applications and urban informatics"
+        },
+        {
+            "id": 206,
+            "name": "Smart contract vulnerability detection"
+        },
+        {
+            "id": 136,
+            "name": "Spectrum sharing and dynamic spectrum access"
+        },
+        {
+            "id": 192,
+            "name": "Stability and reliability for mobile Al"
+        },
+        {
+            "id": 131,
+            "name": "Storage-Computing-Networking Converged Architectures and Key Technologies"
+        },
+        {
+            "id": 184,
+            "name": "Sustainable and secure networked Al"
+        },
+        {
+            "id": 186,
+            "name": "Swarm Intelligence & Multi-Agent Systems"
+        },
+        {
+            "id": 211,
+            "name": "Threats and vulnerability in Web 3.0"
+        },
+        {
+            "id": 54,
+            "name": "TinyML for on-device intelligence"
+        },
+        {
+            "id": 48,
+            "name": "Tools for cloud and edge"
+        },
+        {
+            "id": 117,
+            "name": "Training\/inference for LLMs, diffusion models, and multimodal generators"
+        },
+        {
+            "id": 66,
+            "name": "Trustworthy and Explainable AI in Industrial Informatics"
+        },
+        {
+            "id": 161,
+            "name": "Trustworthy Ubiquitous Al"
+        },
+        {
+            "id": 162,
+            "name": "Ubiquitous Intelligence based Applications"
+        },
+        {
+            "id": 159,
+            "name": "Ubiquitous Intelligence Infrastructure"
+        },
+        {
+            "id": 115,
+            "name": "Vertical Industry Applications"
+        },
+        {
+            "id": 146,
+            "name": "WiFi\/4G\/5G\/LoRa\/UWB\/Acoustic\/Quantum sensing and communication"
+        }
+    ],
+    "track": [
+        {
+            "tag": "cloud-edge",
+            "perm": {
+                "view": "+TrackChair-cloud",
+                "viewpdf": "all",
+                "viewrev": "+TrackChair-cloud",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "+TrackChair-cloud",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "wsmc",
+            "perm": {
+                "view": "+TrackChair-wsmc",
+                "viewpdf": "all",
+                "viewrev": "+TrackChair-wsmc",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "+TrackChair-wsmc",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "ii-internet",
+            "perm": {
+                "view": "+TrackChair-internet",
+                "viewpdf": "all",
+                "viewrev": "+TrackChair-internet",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "+TrackChair-internet",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "infosec",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "sads",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "big-data-fm",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "aigc-mapc",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "dist-storage",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "ngm",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "rfa",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "dsui",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "wma",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "bdmls",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "ncea",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "aimc",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "idpm",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "badv",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "mwt",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "idsia",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "poster",
+            "perm": {
+                "view": "all",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all"
+            }
+        },
+        {
+            "tag": "any",
+            "perm": {
+                "view": "none",
+                "viewpdf": "all",
+                "viewrev": "all",
+                "viewrevid": "all",
+                "assrev": "all",
+                "unassrev": "all",
+                "admin": "none",
+                "hiddentag": "none",
+                "viewallrev": "all",
+                "comment": "all",
+                "viewtracker": "all"
+            }
+        }
+    ]
+}

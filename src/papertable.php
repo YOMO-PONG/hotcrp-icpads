@@ -596,7 +596,7 @@ class PaperTable {
                 $c .= "<a class=\"q fn ui js-foldup\" "
                     . "href=\"" . $this->conf->selfurl($this->qreq, ["atab" => $what])
                     . "\"" . $foldtarget . ">" . $n
-                    . '<span class="t-editor">✎ </span>'
+                    . '<span class="t-editor">✎ </span>'
                     . "</a><span class=\"fx\">" . $n . "</span>";
             } else {
                 $c .= $n;
@@ -1215,7 +1215,7 @@ class PaperTable {
             echo 'Thank you for confirming your intention to finish this review.';
         } else if ($rrow->requestedBy
                    && ($requester = $this->conf->user_by_id($rrow->requestedBy, USER_SLICE))) {
-            echo 'Please take a moment to accept or decline ' . Text::nameo_h($requester, NAME_P) . '’s review request.';
+            echo 'Please take a moment to accept or decline ' . Text::nameo_h($requester, NAME_P) . 's review request.';
         } else {
             echo 'Please take a moment to accept or decline our review request.';
         }
@@ -1237,7 +1237,7 @@ class PaperTable {
             ["class" => "msg msg-warning demargin remargin-left remargin-right ui-submit js-acceptish-review"]);
         echo '<p>You have declined to complete this review. Thank you for informing us.</p>',
             '<div class="f-i mt-3"><label for="declinereason">Optional explanation</label>',
-            (empty($refusal->reason) ? '<div class="field-d">If you’d like, you may enter a brief explanation here.</div>' : ''),
+            (empty($refusal->reason) ? '<div class="field-d">If youd like, you may enter a brief explanation here.</div>' : ''),
             Ht::textarea("reason", $refusal->reason ?? "", ["rows" => 3, "cols" => 40, "spellcheck" => true, "class" => "w-text", "id" => "declinereason"]),
             '</div><div class="aab mt-3">',
             '<div class="aabut">', Ht::submit("Save explanation", ["class" => "btn-primary"]), '</div>';
@@ -1645,7 +1645,7 @@ class PaperTable {
                 '</div><div class="aabut">',
                 Ht::submit("cancel", "Cancel"),
                 "</div></div>",
-                '<span class="hint"><a href="', $this->conf->hoturl("help", "t=tags"), '">Learn more</a> <span class="barsep">·</span> <strong>Tip:</strong> Twiddle tags like “~tag” are visible only to you.</span>',
+                '<span class="hint"><a href="', $this->conf->hoturl("help", "t=tags"), '">Learn more</a> <span class="barsep">·</span> <strong>Tip:</strong> Twiddle tags like "~tag" are visible only to you.</span>',
                 "</div>";
         } else {
             echo '<div class="js-tag-result">', ($tx === "" ? "None" : $tx), '</div>';
@@ -1792,7 +1792,7 @@ class PaperTable {
                  "id" => "tag:~{$tag} {$this->prow->paperId}"]),
             ' <span class="barsep">·</span> ',
             '<a href="', $this->conf->hoturl("search", ["q" => "editsort:#~{$tag}"]), '">Edit all</a>',
-            ' <div class="hint" style="margin-top:4px"><strong>Tip:</strong> <a href="', $this->conf->hoturl("search", ["q" => "editsort:#~{$tag}"]), '">Search “editsort:#~', $tag, '”</a> to drag and drop your ranking, or <a href="', $this->conf->hoturl("offline"), '">use offline reviewing</a> to rank many papers at once.</div>',
+            ' <div class="hint" style="margin-top:4px"><strong>Tip:</strong> <a href="', $this->conf->hoturl("search", ["q" => "editsort:#~{$tag}"]), '">Search "editsort:#~', $tag, '"</a> to drag and drop your ranking, or <a href="', $this->conf->hoturl("offline"), '">use offline reviewing</a> to rank many papers at once.</div>',
             "</form></div>\n";
     }
 
@@ -1983,7 +1983,7 @@ class PaperTable {
                 $this->_main_message(1, "<5>The <a href=\"" . $this->conf->hoturl("deadlines") . "\">submission deadline</a> has passed and this {$this->conf->snouns[0]} will not be reviewed." . $this->deadline_is($sr->submit) . $this->_deadline_override_message());
             }
         } else {
-            $this->_main_message(MessageSet::URGENT_NOTE, "<5>This {$this->conf->snouns[0]} is not ready for review and can’t be changed further. It will not be reviewed." . $this->_deadline_override_message());
+            $this->_main_message(MessageSet::URGENT_NOTE, "<5>This {$this->conf->snouns[0]} is not ready for review and can't be changed further. It will not be reviewed." . $this->_deadline_override_message());
         }
     }
 
@@ -2011,9 +2011,9 @@ class PaperTable {
             }
         } else if ($this->mode === "edit") {
             if ($this->user->can_withdraw_paper($this->prow, true)) {
-                $t = "<5>This {$this->conf->snouns[0]} is under review and can’t be changed. You can still <a href=\"#contacts\">change its contacts</a> or withdraw it from consideration.";
+                $t = "<5>This {$this->conf->snouns[0]} is under review and can't be changed. You can still <a href=\"#contacts\">change its contacts</a> or withdraw it from consideration.";
             } else {
-                $t = "<5>This {$this->conf->snouns[0]} is under review and can’t be changed or withdrawn. You can still <a href=\"#contacts\">change its contacts</a>.";
+                $t = "<5>This {$this->conf->snouns[0]} is under review and can't be changed or withdrawn. You can still <a href=\"#contacts\">change its contacts</a>.";
             }
             $this->_main_message(MessageSet::MARKED_NOTE, $t . $this->_deadline_override_message());
         }
@@ -2048,7 +2048,7 @@ class PaperTable {
             if ($this->conf->allow_final_versions()
                 && $this->prow->outcome_sign > 0
                 && !$this->prow->can_author_view_decision()) {
-                $this->_main_message(1, "<5>This {$this->conf->snouns[0]} has been accepted, but its authors can’t see that yet. Once decisions are visible, the system will allow accepted authors to upload final versions.");
+                $this->_main_message(1, "<5>This {$this->conf->snouns[0]} has been accepted, but its authors can't see that yet. Once decisions are visible, the system will allow accepted authors to upload final versions.");
             } else if (!$this->prow->author_user()->can_edit_paper($this->prow)) {
                 $this->_main_message(MessageSet::MARKED_NOTE, "<5>Authors cannot edit this {$this->conf->snouns[0]} now, but as an administrator you can still make changes.");
             }
@@ -2639,6 +2639,31 @@ class PaperTable {
                 if ($allow_actas) {
                     $n .= $this->_review_table_actas($reviewer);
                 }
+                
+                // 添加邮件通知按钮 - 为管理员和分配页面显示
+                if ($this->mode === "assign" && ($user->privChair || $user->can_administer($prow)) && $rr->reviewType > 0) {
+                    // 检查是否已通知过这个审稿人
+                    $is_notified = $rr->timeRequestNotified > 0 && $rr->timeRequestNotified >= $rr->timeRequested;
+                    $notification_status = $is_notified ? "Notified" : "Not notified";
+                    $notification_class = $is_notified ? "success" : "warning";
+                    $notification_icon = $is_notified ? "✓" : "📧";
+                    
+                    // 构建邮件链接 - 直接跳转到邮件模板页面，并预填审稿人信息
+                    $mail_url = $conf->hoturl("mail", [
+                        "template" => "newpcrev",
+                        "p" => $prow->paperId, 
+                        "reviewer" => $reviewer->email
+                    ]);
+                    
+                    // 添加通知状态和邮件按钮
+                    $n .= ' <span class="review-notification-status">';
+                    $n .= '<span class="badge badge-' . $notification_class . ' badge-sm" title="Notification Status: ' . $notification_status . ' (Type: ' . $rr->reviewType . ')">' . $notification_icon . '</span>';
+                    $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Send email notification to reviewer">';
+                    $n .= '<span style="text-decoration: none;">📧</span>';
+                    $n .= '</a>';
+                    $n .= '</span>';
+                }
+                
                 $rtypex = $rtype ? " {$rtype}" : "";
                 $t .= "<td class=\"rl\">{$n}{$rtypex}</td>";
             }
@@ -2721,7 +2746,42 @@ class PaperTable {
                 }
                 $t .= "</tr>";
             }
-            return $t . "</tbody></table></div></div>\n";
+            
+            // 添加CSS样式支持
+            $t .= '</tbody></table>';
+            $t .= '<style>
+                .review-notification-status {
+                    margin-left: 8px;
+                    white-space: nowrap;
+                }
+                .review-notification-status .badge {
+                    font-size: 0.75em;
+                    padding: 2px 6px;
+                    margin-right: 4px;
+                    border-radius: 10px;
+                }
+                .badge-success {
+                    background-color: #28a745;
+                    color: white;
+                }
+                .badge-warning {
+                    background-color: #ffc107;
+                    color: #212529;
+                }
+                .mail-reviewer-btn {
+                    text-decoration: none;
+                    font-size: 1.1em;
+                    margin-left: 2px;
+                    opacity: 0.7;
+                    transition: opacity 0.2s;
+                }
+                .mail-reviewer-btn:hover {
+                    opacity: 1;
+                    text-decoration: none;
+                }
+            </style>';
+            
+            return $t . "</div></div>\n";
         } else {
             return "";
         }
@@ -2862,7 +2922,7 @@ class PaperTable {
 
         // override conflict
         if ($this->user->privChair && !$this->allow_admin) {
-            $t[] = "<span class=\"revlink\">You can’t override your conflict because this {$this->conf->snouns[0]} has an administrator.</span>";
+            $t[] = "<span class=\"revlink\">You can't override your conflict because this {$this->conf->snouns[0]} has an administrator.</span>";
         }
 
         $aut = "";
@@ -2909,7 +2969,7 @@ class PaperTable {
     function paptabEndWithReviewsAndComments() {
         if ($this->prow->managerContactId === $this->user->contactXid
             && !$this->user->privChair) {
-            $this->_paptabSepContaining("You are this {$this->conf->snouns[0]}’s administrator.");
+            $this->_paptabSepContaining("You are this {$this->conf->snouns[0]}'s administrator.");
         }
 
         // text format link
@@ -3028,14 +3088,14 @@ class PaperTable {
         $m = [];
         if ($this->all_rrows
             && ($whyNot = $this->user->perm_view_review($this->prow, null))) {
-            $m[] = "<p class=\"sd\">You can’t see the reviews for this {$this->conf->snouns[0]}. " . $whyNot->unparse_html() . "</p>";
+            $m[] = "<p class=\"sd\">You can't see the reviews for this {$this->conf->snouns[0]}. " . $whyNot->unparse_html() . "</p>";
         }
         if (!$this->conf->time_review_open()
             && $this->prow->review_type($this->user)) {
             if ($this->rrow) {
-                $m[] = "<p class=\"sd\">You can’t edit your review because the site is not open for reviewing.</p>";
+                $m[] = "<p class=\"sd\">You can't edit your review because the site is not open for reviewing.</p>";
             } else {
-                $m[] = "<p class=\"sd\">You can’t begin your assigned review because the site is not open for reviewing.</p>";
+                $m[] = "<p class=\"sd\">You can't begin your assigned review because the site is not open for reviewing.</p>";
             }
         }
 
@@ -3065,9 +3125,9 @@ class PaperTable {
         // administrator?
         if (!$this->user->is_my_review($rrow)) {
             if ($this->user->is_owned_review($rrow)) {
-                $rrow->message_list[] = MessageItem::marked_note("<0>This isn’t your review, but you can make changes since you requested it.");
+                $rrow->message_list[] = MessageItem::marked_note("<0>This isn't your review, but you can make changes since you requested it.");
             } else if ($this->admin) {
-                $rrow->message_list[] = MessageItem::marked_note("<0>This isn’t your review, but as an administrator you can still make changes.");
+                $rrow->message_list[] = MessageItem::marked_note("<0>This isn't your review, but as an administrator you can still make changes.");
             }
         }
 
@@ -3091,9 +3151,9 @@ class PaperTable {
             if ($ndelegated == 0) {
                 $t = "<5>As a secondary reviewer, you can <a href=\"" . $this->conf->hoturl("assign", "p={$rrow->paperId}") . "\">delegate this review to an external reviewer</a>, but if your external reviewer declines to review the paper, you should complete this review yourself.";
             } else if ($rrow->reviewNeedsSubmit == 0) {
-                $t = "<0>A delegated external reviewer has submitted their review, but you can still complete your own if you’d like.";
+                $t = "<0>A delegated external reviewer has submitted their review, but you can still complete your own if you'd like.";
             } else if ($napproval) {
-                $t = "<0>A delegated external reviewer has submitted their review for approval. If you approve that review, you won’t need to submit your own.";
+                $t = "<0>A delegated external reviewer has submitted their review for approval. If you approve that review, you won't need to submit your own.";
             } else {
                 $t = "<0>Your delegated external reviewer has not yet submitted a review.  If they do not, you should complete this review yourself.";
             }
