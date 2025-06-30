@@ -2212,6 +2212,12 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
             return;
         }
 
+        // Only process track membership if the form contains track membership data
+        // This prevents accidental clearing when user only modifies other profile fields
+        if (!isset($us->qreq->has_track_membership)) {
+            return;
+        }
+
         $all_tracks = $us->conf->all_tracks();
         $selected_tracks = [];
 
