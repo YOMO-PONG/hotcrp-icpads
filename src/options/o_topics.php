@@ -189,7 +189,8 @@ window.hotcrpTrackTopicMap = ', json_encode($js_map), ';
             "Intelligent Data Processing & Management": "idpm",
             "Blockchain & Activation of Data Value": "badv",
             "SS:Millimeter-Wave and Terahertz Sensing and Networks": "mwt",
-            "Interdisciplinary Distributed System and IoT Applications": "idsia"
+            "Interdisciplinary Distributed System and IoT Applications": "idsia",
+            "Security and Privacy in Mobile and Ubiquitous Systems": "spmus",
         };
         
         var internalTrack = trackMapping[trackValue] || trackValue.toLowerCase() || trackValue;

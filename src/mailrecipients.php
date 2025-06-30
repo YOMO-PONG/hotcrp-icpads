@@ -148,7 +148,7 @@ class MailRecipients extends MessageSet {
         $user = $this->user;
         assert(!!$user->isPC);
 
-        if ($user->is_manager()) {
+        if ($user->is_manager() || $user->is_track_manager()) {
             $this->recipt_default_message = "authors";
             $hide = !$this->conf->has_any_submitted();
             $this->defsel("s", "Contact authors of submitted papers", $hide ? self::F_HIDE : 0);
@@ -174,7 +174,7 @@ class MailRecipients extends MessageSet {
 
             // XXX this exposes information about PC review assignments
             // for conflicted papers to the chair; not worth worrying about
-            if (!$user->privChair) {
+            if (!$user->privChair && !$user->is_track_manager()) {
                 $pids = [];
                 $result = $this->conf->qe("select paperId from Paper where managerContactId=?", $user->contactId);
                 while (($row = $result->fetch_row())) {
@@ -218,7 +218,7 @@ class MailRecipients extends MessageSet {
         $this->defsel("myextrev", "Your requested reviewers", self::F_ANYPC | ($hide ? self::F_HIDE : 0));
         $this->defsel("uncmyextrev", "Your requested reviewers with incomplete reviews", self::F_ANYPC | ($hide ? self::F_HIDE : 0));
 
-        if ($user->is_manager()) {
+        if ($user->is_manager() || $user->is_track_manager()) {
             $this->defsel("lead", "Discussion leads", $any_lead ? 0 : self::F_HIDE);
             $this->defsel("shepherd", "Shepherds", $any_shepherd ? 0 : self::F_HIDE);
         }

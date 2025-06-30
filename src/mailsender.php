@@ -47,6 +47,8 @@ class MailSender {
     private $had_nonreceivable = false;
     /** @var int */
     private $cbcount = 0;
+    /** @var array<string>|null */
+    private $revinform = null;
 
     function __construct(MailRecipients $recip, Qrequest $qreq) {
         $this->conf = $recip->conf;
@@ -485,6 +487,11 @@ class MailSender {
                 if ($this->sending) {
                     // Log format matters
                     $this->conf->log_for($this->user, $recip, "Sent mail #{$this->mailid}", $prep->paperId);
+                    
+                    // Only add to revinform if actually sending and this is a review notification
+                    if ($this->revinform !== null && $prep->paperId) {
+                        $this->revinform[] = "(paperId={$prep->paperId} and contactId={$recip->contactId})";
+                    }
                 }
             }
         }
@@ -545,7 +552,7 @@ class MailSender {
         $nrows_total = count($recip_set);
         $nwarnings = 0;
         $has_decoration = false;
-        $revinform = ($this->recipients === "newpcrev" ? [] : null);
+        $this->revinform = ($this->recipients === "newpcrev" ? [] : null);
 
         foreach ($recip_set as $contact) {
             ++$nrows_done;
@@ -585,10 +592,6 @@ class MailSender {
                     "</ul></div></div>",
                     Ht::unstash_script("document.getElementById('mailwarnings').innerHTML = document.getElementById('foldmailwarn{$nwarnings}').innerHTML;");
             }
-
-            if ($this->sending && $revinform !== null && $prow) {
-                $revinform[] = "(paperId={$prow->paperId} and contactId={$contact->contactId})";
-            }
         }
 
         $this->process_prep($fake_prep, $last_prep, null);
@@ -611,8 +614,8 @@ class MailSender {
             $this->print_actions();
         } else {
             $this->conf->qe("update MailLog set status=0 where mailId=?", $this->mailid);
-            if ($revinform) {
-                $this->conf->qe_raw("update PaperReview set timeRequestNotified=" . time() . " where " . join(" or ", $revinform));
+            if ($this->revinform && count($this->revinform) > 0) {
+                $this->conf->qe_raw("update PaperReview set timeRequestNotified=" . time() . " where " . join(" or ", $this->revinform));
             }
         }
         echo "</form>";

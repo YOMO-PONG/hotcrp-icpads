@@ -1922,6 +1922,7 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
                 'badv' => 'Blockchain & Activation of Data Value',
                 'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
                 'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+                'spmus' => 'Security and Privacy in Mobile and Ubiquitous Systems',
             ];
             
             foreach ($tracks as $track) {
@@ -2106,6 +2107,7 @@ window.topicTrackFilterMap = ', json_encode($js_track_map), ';
             'badv' => 'Blockchain & Activation of Data Value',
             'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
             'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+            'spmus' => 'Security and Privacy in Mobile and Ubiquitous Systems',
         ];
 
         echo '<div class="track-membership-container">';

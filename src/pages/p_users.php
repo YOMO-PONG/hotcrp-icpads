@@ -101,6 +101,7 @@ class Users_Page {
             'badv' => 'Blockchain & Activation of Data Value',
             'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
             'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+            'spmus' => 'Security and Privacy in Mobile and Ubiquitous Systems',
         ];
 
         // Alternative: if tracks are configured with full names in the system

@@ -81,6 +81,7 @@ $track_display_names = [
     'badv' => 'Blockchain & Activation of Data Value',
     'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
     'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+    'spmus' => 'Security and Privacy in Mobile and Ubiquitous Systems',
 ];
 
 $Qreq->print_header("Track Membership", "account", ["action_bar" => ""]);

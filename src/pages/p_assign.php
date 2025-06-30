@@ -1039,7 +1039,7 @@ class Assign_Page {
                 '<div class="review-legend mb-3" style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; border-left: 3px solid #dee2e6;">',
                 '<small class="text-muted">',
                 '<strong>Icon Legend:</strong><br>',
-                '<span class="legend-item" style="margin-right: 15px; display: inline-block;">📧 <strong>Yellow envelope</strong> - Review saved but not yet notify reviewer</span>',
+                '<span class="legend-item" style="margin-right: 15px; display: inline-block;">📧 <strong>Yellow envelope</strong> - Reviewer assigned but not yet notified</span>',
                 '<span class="legend-item" style="margin-right: 15px; display: inline-block;">✓ <strong>Green checkmark</strong> - Reviewer has been notified</span>',
                 '</small>',
                 '</div>',
