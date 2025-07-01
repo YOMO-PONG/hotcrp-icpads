@@ -557,13 +557,21 @@ class Assign_Page {
             $conflict_type = $prow->conflict_type($pc);
             $is_conflicted = Conflict::is_conflicted($conflict_type) || Conflict::is_author($conflict_type);
             
+            // Check for potential conflicts (affiliation matching, etc.)
+            $has_potential_conflict = $prow->potential_conflict($pc);
+            
+            // Skip conflicted reviewers and those with potential conflicts from all lists
+            if ($exclude_conflicts && ($is_conflicted || $has_potential_conflict)) {
+                continue;
+            }
+            
             // Get current review count for this reviewer
             $review_count = $acs ? $acs->get($pc->contactId)->rev : 0;
             
             $reviewer_data[$pc->contactId] = [
                 'contact' => $pc,
                 'score' => $topic_score,
-                'conflict' => $is_conflicted,
+                'conflict' => $is_conflicted || $has_potential_conflict,
                 'preference' => $prow->preference($pc),
                 'review_count' => $review_count
             ];
@@ -594,11 +602,6 @@ class Assign_Page {
         
         foreach ($reviewer_data as $cid => $data) {
             if ($count >= $limit) break;
-            
-            // Skip if conflicted
-            if ($exclude_conflicts && $data['conflict']) {
-                continue;
-            }
             
             // Core filtering logic: skip reviewers with more than 6 reviews, even if topic score is high
             if ($data['review_count'] > 6) {
