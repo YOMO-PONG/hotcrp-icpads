@@ -89,7 +89,8 @@ class PaperTable {
         $this->user = $user;
         $this->qreq = $qreq;
         $this->prow = $prow;
-        $this->allow_admin = $user->allow_administer($this->prow);
+        // Only allow PC chairs to have admin privileges for editing papers
+        $this->allow_admin = $user->privChair ? $user->allow_administer($this->prow) : false;
         $this->admin = $user->can_administer($this->prow);
         $this->allow_edit_final = $user->edit_paper_state($this->prow) === 2;
 
@@ -139,7 +140,8 @@ class PaperTable {
 
     /** @return bool */
     private function allow_edit() {
-        return $this->admin || $this->prow->has_author($this->user);
+        // Only allow PC chairs to edit papers, not authors or track managers
+        return $this->user->privChair;
     }
 
     /** @return bool */
