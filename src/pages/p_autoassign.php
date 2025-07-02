@@ -198,14 +198,14 @@ class Autoassign_Page {
             Ht::entry("review:count", $qreq["review:count"] ?? 1,
                       ["size" => 3, "class" => $this->ms->control_class("review:count", "js-autosubmit")]),
             "&nbsp; <i>additional</i>&nbsp; ",
-            Ht::select("review:rtype", ["primary" => "primary", "secondary" => "secondary", "optional" => "optional", "metareview" => "metareview"], $qreq["review:type"]),
+            Ht::select("review:rtype", ["primary" => "primary", "metareview" => "metareview"], $qreq["review:type"]),
             "&nbsp; review(s) per selected paper</div>\n";
 
         $this->print_radio_row("a", "review_ensure", "Ensure each selected paper has <i>at least</i>", ["open" => true]);
         echo "&nbsp; ",
             Ht::entry("review_ensure:count", $qreq["review_ensure:count"] ?? 1,
                       ["size" => 3, "class" => $this->ms->control_class("review_ensure:count", "js-autosubmit")]), "&nbsp; ",
-            Ht::select("review_ensure:rtype", ["primary" => "primary", "secondary" => "secondary", "optional" => "optional", "metareview" => "metareview"], $qreq["review_ensure:rtype"]),
+            Ht::select("review_ensure:rtype", ["primary" => "primary", "metareview" => "metareview"], $qreq["review_ensure:rtype"]),
             "&nbsp; review(s)</div>\n";
 
         $this->print_radio_row("a", "review_per_pc", "Assign each PC member", ["open" => true]);
@@ -213,27 +213,9 @@ class Autoassign_Page {
             Ht::entry("review_per_pc:count", $qreq["review_per_pc:count"] ?? 1,
                       ["size" => 3, "class" => $this->ms->control_class("review_per_pc:count", "js-autosubmit")]),
             "&nbsp; additional&nbsp; ",
-            Ht::select("review_per_pc:rtype", ["primary" => "primary", "secondary" => "secondary", "optional" => "optional", "metareview" => "metareview"], $qreq["review_per_pc:rtype"]),
-            "&nbsp; review(s) from this paper selection";
+            Ht::select("review_per_pc:rtype", ["primary" => "primary", "metareview" => "metareview"], $qreq["review_per_pc:rtype"]),
+            "&nbsp; review(s) from this paper selection</div>";
 
-        // Review round
-        $rev_rounds = $this->conf->round_selector_options(null);
-        if (count($rev_rounds) > 1 || !($rev_rounds["unnamed"] ?? false)) {
-            echo '<div';
-            if (($c = $this->ms->suffix_control_class(":round"))) {
-                echo ' class="', trim($c), '"';
-            }
-            echo ' style="font-size:smaller">Review round: ';
-            $expected_round = $qreq["all:round"] ? : $this->conf->assignment_round_option(false);
-            if (count($rev_rounds) > 1) {
-                echo '&nbsp;', Ht::select("all:round", $rev_rounds, $expected_round);
-            } else {
-                echo $expected_round;
-            }
-            echo "</div>";
-        }
-
-        echo "</div>"; // revpc container
         echo "</div>"; // .form-g
     }
 
@@ -241,7 +223,7 @@ class Autoassign_Page {
         echo '<div class="form-g">';
         $this->print_radio_row("a", "prefconflict", "Assign conflicts when PC members have review preferences of &minus;100 or less");
         $this->print_radio_row("a", "clear", "Clear all &nbsp;", ["open" => true]);
-        echo Ht::select("clear:type", ["primary" => "primary", "secondary" => "secondary", "optional" => "optional", "metareview" => "metareview", "conflict" => "conflict", "lead" => "discussion lead", "shepherd" => "shepherd"], $this->qreq["clear:type"]),
+        echo Ht::select("clear:type", ["primary" => "primary", "metareview" => "metareview", "lead" => "discussion lead", "shepherd" => "shepherd"], $this->qreq["clear:type"]),
             " &nbsp;assignments for selected papers and PC members</div></div>\n";
     }
 
@@ -313,8 +295,6 @@ class Autoassign_Page {
         <hr>
         <p>Types of PC review:</p>
         <dl><dt>', review_type_icon(REVIEW_PRIMARY), ' Primary</dt><dd>Mandatory review</dd>
-          <dt>', review_type_icon(REVIEW_SECONDARY), ' Secondary</dt><dd>May be delegated to external reviewers</dd>
-          <dt>', review_type_icon(REVIEW_PC), ' Optional</dt><dd>May be declined</dd>
           <dt>', review_type_icon(REVIEW_META), ' Metareview</dt><dd>Can view all other reviews before completing their own</dd></dl>
         </div></div>', "\n";
         echo Ht::unstash_script("\$(\"#autoassignform\").awaken()"),
@@ -352,6 +332,21 @@ class Autoassign_Page {
         // action
         echo '<div class="form-section">',
             '<h3 class="', $this->ms->control_class("ass", "form-h", "is-"), "\">Action</h3>\n";
+        
+        // Review round selector - moved to top for better visibility
+        $rev_rounds = $this->conf->round_selector_options(null);
+        if (count($rev_rounds) > 1 || !($rev_rounds["unnamed"] ?? false)) {
+            echo '<div class="form-g mb-3" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">',
+                '<label class="form-label"><strong>Review round:</strong></label>';
+            $expected_round = $qreq["all:round"] ?: $this->conf->assignment_round_option(false);
+            if (count($rev_rounds) > 1) {
+                echo '&nbsp;', Ht::select("all:round", $rev_rounds, $expected_round, ["class" => "form-select"]);
+            } else {
+                echo '&nbsp;<span class="text-muted">', htmlspecialchars($expected_round), '</span>';
+            }
+            echo '</div>';
+        }
+        
         $this->print_review_actions();
         $this->print_conflict_actions();
         $this->print_lead_actions();

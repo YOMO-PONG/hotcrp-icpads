@@ -120,6 +120,51 @@ class MailSender {
         }
     }
 
+    /**
+     * 获取同一个 track 的所有 trackchair 邮箱
+     * @param Contact $user 当前用户
+     * @return string 逗号分隔的邮箱列表
+     */
+    private static function get_track_chairs_emails(Contact $user) {
+        if (!$user->contactTags) {
+            return "";
+        }
+        
+        // 解析用户的标签，找到 trackchair 标签
+        $track_name = null;
+        foreach (explode(" ", $user->contactTags) as $tag) {
+            if (preg_match('/^trackchair-(.+)#/', $tag, $matches)) {
+                $track_name = $matches[1];
+                break;
+            }
+        }
+        
+        if (!$track_name) {
+            return "";
+        }
+        
+        // 查询同一个 track 的所有 trackchair
+        $tag_pattern = "trackchair-{$track_name}#";
+        $result = $user->conf->qe("
+            SELECT email 
+            FROM ContactInfo 
+            WHERE contactTags LIKE ? 
+            AND (cflags & ?) = 0
+            ORDER BY email
+        ", 
+        "% {$tag_pattern}%", 
+        Contact::CFM_DISABLEMENT
+        );
+        
+        $emails = [];
+        while ($row = $result->fetch_row()) {
+            $emails[] = $row[0];
+        }
+        $result->close();
+        
+        return implode(", ", $emails);
+    }
+
     static function clean_request(Qrequest $qreq) {
         $conf = $qreq->conf();
         $null_mailer = self::null_mailer($qreq->user());
@@ -145,7 +190,21 @@ class MailSender {
             // XXX should only apply to papers you administer
             $qreq["reply-to"] = simplify_whitespace($qreq["reply-to"]);
         } else {
-            $qreq["reply-to"] = $conf->opt("emailReplyTo") ?? "";
+            // 默认的 Reply-to 地址
+            $default_reply_to = $conf->opt("emailReplyTo") ?? "";
+            
+            // 如果用户是 trackchair，自动添加同 track 的其他 trackchair 邮箱
+            $track_chairs_emails = self::get_track_chairs_emails($qreq->user());
+            
+            if ($track_chairs_emails) {
+                if ($default_reply_to) {
+                    $qreq["reply-to"] = $default_reply_to . ", " . $track_chairs_emails;
+                } else {
+                    $qreq["reply-to"] = $track_chairs_emails;
+                }
+            } else {
+                $qreq["reply-to"] = $default_reply_to;
+            }
         }
     }
 
@@ -285,14 +344,14 @@ class MailSender {
                 && (strpos($this->qreq->body, "%REVIEWS%")
                     || strpos($this->qreq->body, "%COMMENTS%"))) {
                 if (!$this->conf->time_some_author_view_review()) {
-                    $ms[] = MessageItem::warning("<5>Although these mails contain reviews and/or comments, authors can’t see reviews or comments on the site. (<a href=\"" . $this->conf->hoturl("settings", "group=dec") . "\" class=\"nw\">Change this setting</a>)");
+                    $ms[] = MessageItem::warning("<5>Although these mails contain reviews and/or comments, authors can't see reviews or comments on the site. (<a href=\"" . $this->conf->hoturl("settings", "group=dec") . "\" class=\"nw\">Change this setting</a>)");
                 }
             }
             if (isset($this->qreq->body)
                 && $this->user->privChair
                 && substr($this->recipients, 0, 4) == "dec:") {
                 if (!$this->conf->time_some_author_view_decision()) {
-                    $ms[] = MessageItem::warning("<5>You appear to be sending an acceptance or rejection notification, but authors can’t see paper decisions on the site. (<a href=\"" . $this->conf->hoturl("settings", "group=dec") . "\" class=\"nw\">Change this setting</a>)");
+                    $ms[] = MessageItem::warning("<5>You appear to be sending an acceptance or rejection notification, but authors can't see paper decisions on the site. (<a href=\"" . $this->conf->hoturl("settings", "group=dec") . "\" class=\"nw\">Change this setting</a>)");
                 }
             }
             if (!empty($ms)) {
@@ -307,7 +366,7 @@ class MailSender {
               '<div id="mailwarnings"></div>',
               '<div class="fx msg msg-info">',
                 '<p class="feedback is-note">',
-                  'Verify that the mails look correct, then select “Send” to send the checked mails.<br>',
+                  'Verify that the mails look correct, then select "Send" to send the checked mails.<br>',
                   "Mailing to:&nbsp;", $this->recip->unparse(),
                   '<span id="mailinfo"></span>';
             if (!preg_match('/\A(?:pc\z|pc:|all\z)/', $this->recipients)

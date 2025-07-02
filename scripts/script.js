@@ -5147,13 +5147,10 @@ handle_ui.on("js-assignment-fold", function (evt) {
             div_container.appendChild(div_options);
             div_options.className = "assignment-ui-options";
             div_options.append(make_radio(name, 4, "Primary", revtype),
-                make_radio(name, 3, "Secondary", revtype),
-                make_radio(name, 2, "Optional", revtype),
                 make_radio(name, 5, "Metareview", revtype));
             append_round_selector(name, revtype, $a, div_options);
             if (!revinprogress) {
-                div_options.append(make_radio(name, -1, "Conflict", conftype > 0 ? -1 : 0),
-                    make_radio(name, 0, "None", revtype || conftype ? -1 : 0));
+                div_options.append(make_radio(name, 0, "None", revtype || conftype ? -1 : 0));
             }
             $a.append(div_container);
         }
@@ -5176,7 +5173,7 @@ handle_ui.on("js-assignment-autosave", function () {
 
 handle_ui.on("js-bulkassign-action", function () {
     foldup.call(this, null, {open: this.value === "review"});
-    foldup.call(this, null, {open: /^(?:primary|secondary|(?:optional|meta)?review)$/.test(this.value), n:2});
+    foldup.call(this, null, {open: /^(?:primary|meta(?:review)?)$/.test(this.value), n:2});
     let selopt = this.selectedOptions[0] || this.options[0];
     $("#k-bulkassign-entry").attr("placeholder", selopt.getAttribute("data-csv-header"));
 });
