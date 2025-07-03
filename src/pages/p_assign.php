@@ -415,7 +415,7 @@ class Assign_Page {
 
     /** @param Contact $pc
      * @param AssignmentCountSet $acs */
-    private function print_pc_assignment($pc, $acs, $auto_assigned = []) {
+    private function print_pc_assignment($pc, $acs, $auto_assigned = [], $reviewer_data = null, $is_assigned = false, $is_recommended = false) {
         // first, name and assignment
         $ct = $this->prow->conflict_type($pc);
         $rrow = $this->prow->review_by_user($pc);
@@ -434,17 +434,29 @@ class Assign_Page {
         }
 
         // Check if this reviewer is auto-assigned
-        $is_auto_assigned = in_array($pc->contactId, $auto_assigned);
-        $auto_class = $is_auto_assigned ? ' auto-assigned' : '';
+        // No auto assignment in single round review
         
-        // If auto-assigned and not conflicted, set as Primary reviewer (type 4)
-        if ($is_auto_assigned && $revtype == 0 && !Conflict::is_conflicted($ct)) {
-            $revtype = 4; // Primary reviewer
-            $crevtype = 4;
+        // Auto-set recommended reviewers as Primary if not already assigned
+        if ($is_recommended && $revtype == 0 && !Conflict::is_conflicted($ct)) {
+            $revtype = REVIEW_PRIMARY;
+            $crevtype = REVIEW_PRIMARY;
         }
 
-        echo '<div class="ctelt' . $auto_class . '">',
-            '<div class="ctelti has-assignment has-fold foldc" data-pid="', $this->prow->paperId,
+        // Get reviewer data if available
+        $topic_score = $reviewer_data ? $reviewer_data['score'] : $this->prow->topic_interest_score($pc);
+        $is_trackchair_data = $reviewer_data ? $reviewer_data['is_trackchair'] : false;
+        
+        // Determine row classes
+        $row_classes = ['reviewer-list-row'];
+        if ($is_assigned) {
+            $row_classes[] = 'assigned-reviewer';
+        }
+        if ($is_recommended) {
+            $row_classes[] = 'recommended-reviewer';
+        }
+        
+        // List row format
+        echo '<div class="', implode(' ', $row_classes), '" data-pid="', $this->prow->paperId,
             '" data-uid="', $pc->contactId,
             '" data-review-type="', $revtype;
         if (Conflict::is_conflicted($ct)) {
@@ -459,42 +471,43 @@ class Assign_Page {
         if ($rrow && $rrow->reviewStatus >= ReviewInfo::RS_DRAFTED) {
             echo '" data-review-in-progress="';
         }
-        if ($is_auto_assigned) {
-            echo '" data-auto-assigned="1';
-        }
-        echo '"><div class="pctbname pctbname', $crevtype, ' ui js-assignment-fold">',
-            '<button type="button" class="q ui js-assignment-fold">', expander(null, 0);
-            
-        // Add auto-assignment indicator
-        if ($is_auto_assigned) {
-            echo '<span class="auto-assign-indicator" title="Auto-recommended assignment">🎯</span> ';
+        echo '">';
+        
+        // Name column
+        echo '<div class="reviewer-name-col">';
+        
+        // Status indicators
+        if ($is_assigned) {
+            echo '<span class="assigned-indicator" title="Currently assigned">✓</span> ';
+        } else if ($is_recommended) {
+            echo '<span class="recommended-indicator" title="Recommended reviewer">⭐</span> ';
         }
         
-        echo $this->user->reviewer_html_for($pc), '</button>';
+        // Track chair indicator
+        if ($is_trackchair_data) {
+            echo '<span class="trackchair-badge" title="Track Chair">TC</span> ';
+        }
+        
+        echo $this->user->reviewer_html_for($pc);
         if ($crevtype != 0) {
             if ($rrow) {
-                echo review_type_icon($crevtype, $rrow->icon_classes("ml-1")), $rrow->round_h();
+                echo ' ', review_type_icon($crevtype, $rrow->icon_classes("ml-1")), $rrow->round_h();
             } else {
-                echo review_type_icon($crevtype, "ml-1");
+                echo ' ', review_type_icon($crevtype, "ml-1");
             }
         }
-        if ($revtype >= 0) {
-            $pf = $this->prow->preference($pc);
-            $tv = $pf->preference ? null : $this->prow->topic_interest_score($pc);
-            if ($pf->exists() || $tv) {
-                echo " ", $pf->unparse_span($tv);
-            }
-        }
-        echo '</div>'; // .pctbname
-        if ($potconf) {
-            echo '<div class="need-tooltip" data-tooltip-class="gray" data-tooltip="', str_replace('"', '&quot;', PaperInfo::potential_conflict_tooltip_html($potconf)), '">', $potconf->announce, '</div>';
-        }
-
-        // then, number of reviews with enhanced display
-        echo '<div class="pctbnrev">';
+        echo '</div>';
+        
+        // Topics Score column
+        echo '<div class="reviewer-score-col">';
+        echo '<span class="topic-score">' . $topic_score . '</span>';
+        echo '</div>';
+        
+        // Review count column
+        echo '<div class="reviewer-count-col">';
         $ac = $acs->get($pc->contactId);
         if ($ac->rev === 0) {
-            echo "0 reviews";
+            echo "0";
         } else {
             $review_class = '';
             $review_title = '';
@@ -510,14 +523,46 @@ class Assign_Page {
             
             echo '<a class="q"' . $review_class . $review_title . ' href="',
                 $this->conf->hoturl("search", "q=re:" . urlencode($pc->email)), '">',
-                plural($ac->rev, "review"), "</a>";
+                $ac->rev, "</a>";
             if ($ac->pri && $ac->pri < $ac->rev) {
-                echo '&nbsp; (<a class="q" href="',
+                echo '<br><small>(<a class="q" href="',
                     $this->conf->hoturl("search", "q=pri:" . urlencode($pc->email)),
-                    "\">{$ac->pri} primary</a>)";
+                    "\">{$ac->pri} pri</a>)</small>";
             }
         }
-        echo "</div></div></div>\n"; // .pctbnrev .ctelti .ctelt
+        echo '</div>';
+        
+        // Assignment controls column
+        echo '<div class="reviewer-assign-col">';
+        if ($this->user->allow_administer($this->prow)) {
+            $inputName = "assrev{$this->prow->paperId}u{$pc->contactId}";
+            echo '<select name="', $inputName, '" class="assignment-selector js-assign-review">';
+            
+            // Options with current selection
+            echo '<option value="0"', ($revtype == 0 && !Conflict::is_conflicted($ct) ? ' selected' : ''), '>None</option>';
+            echo '<option value="4"', ($revtype == 4 ? ' selected' : ''), '>Primary</option>';
+            echo '<option value="5"', ($revtype == 5 ? ' selected' : ''), '>Metareview</option>';
+            
+            if (Conflict::is_conflicted($ct)) {
+                echo '<option value="-1" selected>Conflict</option>';
+            }
+            
+            echo '</select>';
+        } else {
+            // Display current status without edit capability
+            if ($revtype == 4) {
+                echo '<span class="assignment-status primary">Primary</span>';
+            } else if ($revtype == 5) {
+                echo '<span class="assignment-status metareview">Metareview</span>';
+            } else if (Conflict::is_conflicted($ct)) {
+                echo '<span class="assignment-status conflict">Conflict</span>';
+            } else {
+                echo '<span class="assignment-status">None</span>';
+            }
+        }
+        echo '</div>';
+        
+        echo "</div>\n"; // .reviewer-list-row
     }
 
     /**
@@ -525,7 +570,7 @@ class Assign_Page {
      * @param int $limit Maximum number of recommendations
      * @param bool $exclude_conflicts Whether to exclude conflicted reviewers
      * @param AssignmentCountSet $acs Assignment count set for reviewer workload
-     * @return array{recommended: list<Contact>, all: list<Contact>, scores: array<int,array{score:int,conflict:bool,review_count:int}>, auto_assigned: list<int>}
+     * @return array{recommended: list<Contact>, all: list<Contact>, scores: array<int,array{score:int,conflict:bool,review_count:int}>}
      */
     private function get_recommended_reviewers($limit = 10, $exclude_conflicts = true, $acs = null) {
         $prow = $this->prow;
@@ -538,18 +583,21 @@ class Assign_Page {
         
         // Collect all eligible PC members with their scores and conflict status
         foreach ($this->conf->pc_members() as $pc) {
-            // Skip PC Chair
-            if ($pc->privChair) {
+            // Include track chairs for this paper's track
+            $is_trackchair = $this->is_track_chair($pc, $paper_track);
+            
+            // Skip PC Chair only if they are not also a track chair
+            if ($pc->privChair && !$is_trackchair) {
                 continue;
             }
             
             // Check if PC member is assignable to this track
-            if (!$pc->pc_track_assignable($prow) && !$prow->has_reviewer($pc)) {
+            if (!$pc->pc_track_assignable($prow) && !$prow->has_reviewer($pc) && !$is_trackchair) {
                 continue;
             }
             
-            // Filter by track membership if paper has a track
-            if ($paper_track && !$this->is_track_member($pc, $paper_track)) {
+            // Filter by track membership if paper has a track, but always include track chairs
+            if ($paper_track && !$this->is_track_member($pc, $paper_track) && !$is_trackchair) {
                 continue;
             }
             
@@ -573,7 +621,8 @@ class Assign_Page {
                 'score' => $topic_score,
                 'conflict' => $is_conflicted || $has_potential_conflict,
                 'preference' => $prow->preference($pc),
-                'review_count' => $review_count
+                'review_count' => $review_count,
+                'is_trackchair' => $is_trackchair
             ];
             
             $all_pc[] = $pc;
@@ -597,7 +646,6 @@ class Assign_Page {
         
         // Filter recommendations with workload consideration
         $recommended = [];
-        $auto_assigned = [];
         $count = 0;
         
         foreach ($reviewer_data as $cid => $data) {
@@ -609,12 +657,6 @@ class Assign_Page {
             }
             
             $recommended[] = $data['contact'];
-            
-            // Auto-assign first 3 qualified reviewers
-            if ($count < 3) {
-                $auto_assigned[] = $cid;
-            }
-            
             $count++;
         }
         
@@ -624,15 +666,15 @@ class Assign_Page {
             $scores[$cid] = [
                 'score' => $data['score'],
                 'conflict' => $data['conflict'],
-                'review_count' => $data['review_count']
+                'review_count' => $data['review_count'],
+                'is_trackchair' => $data['is_trackchair']
             ];
         }
         
         return [
             'recommended' => $recommended,
             'all' => $all_pc,
-            'scores' => $scores,
-            'auto_assigned' => $auto_assigned
+            'scores' => $scores
         ];
     }
 
@@ -673,61 +715,135 @@ class Assign_Page {
         $member_tag = "trackmember-{$track_tag}";
         return $pc->has_tag($member_tag);
     }
+    
+    /**
+     * Check if a PC member is a chair of the specified track
+     * @param Contact $pc
+     * @param string $track_tag
+     * @return bool
+     */
+    private function is_track_chair(Contact $pc, $track_tag) {
+        if (!$track_tag) {
+            return false;
+        }
+        $chair_tag = "trackchair-{$track_tag}";
+        return $pc->has_tag($chair_tag);
+    }
 
     /**
      * Print the recommended reviewers section
      * @param array $recommended_data Result from get_recommended_reviewers()
      * @param AssignmentCountSet $acs
      */
-    private function print_recommended_reviewers($recommended_data, $acs) {
+    private function print_all_reviewers_unified($recommended_data, $acs) {
         $recommended = $recommended_data['recommended'];
-        $auto_assigned = $recommended_data['auto_assigned'];
+        $all_reviewers = $recommended_data['all'];
+        $scores = $recommended_data['scores'];
         
-        echo '<div id="recommended-view">',
+        echo '<div id="unified-reviewer-view">',
             '<div class="flex-container mb-3">',
-            '<h3 class="revcard-subhead">Recommended reviewers</h3>',
-            '<div class="review-round-selector">',
-            '<label for="review-round-select">Review round:</label>',
-            '<select id="review-round-select" class="ml-2">',
-            '<option value="R1">R1 </option>',
-            '<option value="R2">R2 (Assign MetaReviewer)</option>',
-            '</select>',
-            '</div>',
+            '<h3 class="revcard-subhead">PC Members Assignment</h3>',
             '</div>';
             
-        // Add auto-assignment control panel
-        if (!empty($auto_assigned)) {
-            echo '<div class="auto-assignment-panel mb-3">',
+        // Add recommendation info panel only if there are recommendations
+        if (!empty($recommended)) {
+            echo '<div class="recommendation-panel mb-3">',
                 '<div class="flex-container">',
-                '<div class="auto-assign-info">',
-                '<span class="info-icon">🎯</span> ',
-                '<span class="info-text">System has automatically recommended the top ', count($auto_assigned), ' most suitable reviewers based on topic match and workload (pre-selected as Primary reviewers)</span>',
+                '<div class="recommendation-info">',
+                '<span class="info-icon">⭐</span> ',
+                '<span class="info-text">Top 3 recommended reviewers based on topic match and workload are marked with ⭐ and pre-selected as Primary reviewers</span>',
+                '</div>',
+                '</div>',
+                '</div>';
+        } else {
+            echo '<div class="info-panel mb-3">',
+                '<div class="flex-container">',
+                '<div class="no-recommendation-info">',
+                '<span class="info-text">Assignments already exist - showing all PC members for review management</span>',
                 '</div>',
                 '</div>',
                 '</div>';
         }
-            
-        echo '<div class="flex-container mb-3">',
-            '<label class="checki ml-3">',
-            '</label>',
+        
+        // Search functionality
+        echo '<div class="mb-3">',
+            '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name..." />',
             '</div>';
         
-        if (empty($recommended)) {
-            echo '<p class="feedback is-note">No recommended reviewers were found under the current settings。</p>';
+        if (empty($all_reviewers)) {
+            echo '<p class="feedback is-note">No PC members found.</p>';
         } else {
-            echo '<div class="pc-ctable has-assignment-set need-assignment-change recommended-list">';
-            foreach ($recommended as $pc) {
-                $this->print_pc_assignment($pc, $acs, $auto_assigned);
+            // Combine and sort all reviewers
+            $all_pc_data = [];
+            $recommended_ids = array_column($recommended, 'contactId');
+            
+            // Get all PC members with their data
+            foreach ($all_reviewers as $pc) {
+                // If scores are empty (no recommendations), calculate data on the fly
+                if (empty($scores)) {
+                    $reviewer_info = [
+                        'score' => $this->prow->topic_interest_score($pc),
+                        'conflict' => false,
+                        'review_count' => $acs ? $acs->get($pc->contactId)->rev : 0,
+                        'is_trackchair' => $this->is_track_chair($pc, $this->get_paper_track_tag($this->prow))
+                    ];
+                } else {
+                    $reviewer_info = $scores[$pc->contactId] ?? [
+                        'score' => $this->prow->topic_interest_score($pc),
+                        'conflict' => false,
+                        'review_count' => $acs ? $acs->get($pc->contactId)->rev : 0,
+                        'is_trackchair' => $this->is_track_chair($pc, $this->get_paper_track_tag($this->prow))
+                    ];
+                }
+                
+                // Check if currently assigned
+                $rrow = $this->prow->review_by_user($pc);
+                $is_assigned = $rrow && $rrow->reviewType > 0;
+                $is_recommended = in_array($pc->contactId, $recommended_ids);
+                
+                $all_pc_data[] = [
+                    'contact' => $pc,
+                    'reviewer_info' => $reviewer_info,
+                    'is_assigned' => $is_assigned,
+                    'is_recommended' => $is_recommended,
+                    'sort_priority' => $is_assigned ? 1 : ($is_recommended ? 2 : 3)
+                ];
             }
+            
+            // Sort: assigned first, then recommended, then others
+            usort($all_pc_data, function($a, $b) {
+                if ($a['sort_priority'] !== $b['sort_priority']) {
+                    return $a['sort_priority'] <=> $b['sort_priority'];
+                }
+                // Within same priority, sort by topic score
+                return $b['reviewer_info']['score'] <=> $a['reviewer_info']['score'];
+            });
+            
+            // List header
+            echo '<div class="reviewer-list-container">',
+                '<div class="reviewer-list-header">',
+                '<div class="reviewer-name-header">Name</div>',
+                '<div class="reviewer-score-header">Topic Score</div>',
+                '<div class="reviewer-count-header">Reviews</div>',
+                '<div class="reviewer-assign-header">Assignment</div>',
+                '</div>';
+                
+            echo '<div class="reviewer-list-body has-assignment-set need-assignment-change">';
+            foreach ($all_pc_data as $data) {
+                $this->print_pc_assignment(
+                    $data['contact'], 
+                    $acs, 
+                    [], // no auto_assigned needed
+                    $data['reviewer_info'],
+                    $data['is_assigned'],
+                    $data['is_recommended']
+                );
+            }
+            echo '</div>';
             echo '</div>';
         }
         
-        echo '<div class="mt-3">',
-            '<button type="button" class="btn btn-outline js-show-all-reviewers">',
-            ' View All PC Members',
-            '</button>',
-            '</div>',
-            '</div>';
+        echo '</div>';
             
         // Add CSS and JavaScript for reviewer recommendation functionality
         echo '
@@ -735,7 +851,193 @@ class Assign_Page {
 .flex-container { display: flex; align-items: center; justify-content: space-between; }
 .pc-ctable-container { position: relative; }
 .revcard-subhead { margin: 0; font-size: 1.1em; font-weight: bold; }
-.recommended-list .ctelt { border-left: 3px solid #28a745; }
+
+/* List-style reviewer display */
+.reviewer-list-container {
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.reviewer-list-header {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1.5fr;
+    gap: 1rem;
+    background: #f8f9fa;
+    padding: 0.75rem;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.reviewer-list-body {
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.reviewer-list-row {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1.5fr;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.reviewer-list-row.assigned-reviewer {
+    background-color: #d4edda !important;
+    border-left: 4px solid #28a745;
+    order: -2;
+}
+
+.reviewer-list-row.recommended-reviewer {
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    order: -1;
+}
+
+.reviewer-list-row.recommended-reviewer .assignment-selector {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.reviewer-list-row:hover {
+    background-color: #f8f9fa;
+}
+
+.reviewer-list-row.auto-assigned {
+    border-left: 4px solid #28a745;
+    background-color: #f8fff9;
+}
+
+.reviewer-name-col {
+    font-weight: 500;
+}
+
+.reviewer-score-col {
+    text-align: center;
+}
+
+.topic-score {
+    background: #007bff;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.reviewer-count-col {
+    text-align: center;
+}
+
+.high-workload {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.medium-workload {
+    color: #fd7e14 !important;
+    font-weight: bold;
+}
+
+.reviewer-assign-col {
+    text-align: center;
+}
+
+.assignment-selector {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    background: white;
+    font-size: 0.9em;
+    min-width: 100px;
+}
+
+.assignment-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.assignment-status.primary {
+    background: #007bff;
+    color: white;
+}
+
+.assignment-status.metareview {
+    background: #6f42c1;
+    color: white;
+}
+
+.assignment-status.conflict {
+    background: #dc3545;
+    color: white;
+}
+
+.assigned-indicator {
+    background: #28a745;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 50%;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.recommended-indicator {
+    color: #ffc107;
+    font-size: 1.1em;
+    margin-right: 0.5rem;
+}
+
+.info-panel {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.no-recommendation-info {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.trackchair-badge {
+    background: #6f42c1;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.7em;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.auto-assign-indicator {
+    margin-right: 0.5rem;
+    font-size: 1.1em;
+}
+
+.auto-assignment-panel {
+    background: #e8f5e8;
+    border: 1px solid #c3e6cb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.auto-assign-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-icon {
+    font-size: 1.2em;
+}
+
 .conflicted-reviewer { opacity: 0.6; background-color: #fff5f5; }
 .conflicted-reviewer .pctbname { color: #dc3545; }
 .btn-outline { 
@@ -897,21 +1199,7 @@ class Assign_Page {
             });
         }
         
-        // View toggle buttons
-        var showAllBtn = document.querySelector(".js-show-all-reviewers");
-        var backToRecommendedBtn = document.querySelector(".js-back-to-recommended");
-        
-        if (showAllBtn) {
-            showAllBtn.addEventListener("click", function() {
-                showFullView();
-            });
-        }
-        
-        if (backToRecommendedBtn) {
-            backToRecommendedBtn.addEventListener("click", function() {
-                showRecommendedView();
-            });
-        }
+        // No view toggle buttons needed in unified view
         
         // Search functionality
         var searchInput = document.getElementById("reviewer-search");
@@ -942,35 +1230,16 @@ class Assign_Page {
         }
     }
     
-    // Show full reviewer list
-    function showFullView() {
-        document.getElementById("recommended-view").style.display = "none";
-        document.getElementById("full-view").style.display = "block";
-        
-        // Clear search when switching views
-        var searchInput = document.getElementById("reviewer-search");
-        if (searchInput) {
-            searchInput.value = "";
-            filterReviewersBySearch("");
-        }
-    }
-    
-    // Show recommended reviewer list
-    function showRecommendedView() {
-        document.getElementById("full-view").style.display = "none";
-        document.getElementById("recommended-view").style.display = "block";
-    }
-    
     // Filter reviewers based on search input
     function filterReviewersBySearch(searchTerm) {
-        var fullList = document.querySelector("#full-view .full-list");
-        if (!fullList) return;
+        var reviewerList = document.querySelector("#unified-reviewer-view .reviewer-list-body");
+        if (!reviewerList) return;
         
-        var reviewers = fullList.querySelectorAll(".ctelt");
+        var reviewers = reviewerList.querySelectorAll(".reviewer-list-row");
         var searchLower = searchTerm.toLowerCase();
         
         reviewers.forEach(function(reviewer) {
-            var nameElement = reviewer.querySelector(".pctbname button");
+            var nameElement = reviewer.querySelector(".reviewer-name-col");
             var visible = true;
             
             if (searchTerm.trim() !== "" && nameElement) {
@@ -997,31 +1266,7 @@ class Assign_Page {
 </script>';
     }
 
-    /**
-     * Print the full reviewers section (initially hidden)
-     * @param array $all_pc All PC members
-     * @param AssignmentCountSet $acs
-     * @param array $auto_assigned Auto-assigned reviewer IDs
-     */
-    private function print_all_reviewers($all_pc, $acs, $auto_assigned = []) {
-        echo '<div id="full-view" style="display: none;">',
-            '<div class="flex-container mb-3">',
-            '<h3 class="revcard-subhead">All PC Members</h3>',
-            '<button type="button" class="btn btn-outline js-back-to-recommended">',
-            'Back to Recommended View',
-            '</button>',
-            '</div>',
-            '<div class="mb-3">',
-            '<input type="text" id="reviewer-search" class="fullw" placeholder="Search reviewer name  ..." />',
-            '</div>',
-            '<div class="pc-ctable has-assignment-set need-assignment-change full-list">';
-        
-        foreach ($all_pc as $pc) {
-            $this->print_pc_assignment($pc, $acs, $auto_assigned);
-        }
-        
-        echo '</div></div>';
-    }
+
 
     function print() {
         $prow = $this->prow;
@@ -1087,8 +1332,38 @@ class Assign_Page {
         if ($user->can_administer($prow)) {
             $acs = AssignmentCountSet::load($user, AssignmentCountSet::HAS_REVIEW);
 
-            // Get recommended reviewers data
-            $recommended_data = $this->get_recommended_reviewers(10, true, $acs);
+            // Only recommend reviewers if no assignments exist yet
+            $has_existing_assignments = false;
+            foreach ($prow->all_reviews() as $rrow) {
+                if ($rrow->reviewType > 0) {
+                    $has_existing_assignments = true;
+                    break;
+                }
+            }
+            
+            if ($has_existing_assignments) {
+                // If assignments already exist, don't show recommendations
+                // But still filter out conflicted PC members
+                $filtered_pc = [];
+                foreach ($this->conf->pc_members() as $pc) {
+                    $conflict_type = $prow->conflict_type($pc);
+                    $is_conflicted = Conflict::is_conflicted($conflict_type) || Conflict::is_author($conflict_type);
+                    $has_potential_conflict = $prow->potential_conflict($pc);
+                    
+                    if (!$is_conflicted && !$has_potential_conflict) {
+                        $filtered_pc[] = $pc;
+                    }
+                }
+                
+                $recommended_data = [
+                    'recommended' => [],
+                    'all' => $filtered_pc,
+                    'scores' => []
+                ];
+            } else {
+                // Get recommended reviewers data (limit to 3) only for new papers
+                $recommended_data = $this->get_recommended_reviewers(3, true, $acs);
+            }
             
             // Get paper track for JavaScript
             $paper_track = $this->get_paper_track_tag($prow);
@@ -1105,7 +1380,7 @@ class Assign_Page {
             Ht::stash_script('$(hotcrp.load_editable_pc_assignments)');
 
             if ($this->conf->has_topics()) {
-                echo "<p>topic scores as \"T#\",the higher the T, the more interested the reviewer is in the topic.</p>";
+                echo "<p>the higher the topic scores , the more interested the reviewer is in the topic.</p>";
             } else {
                 echo "<p>Review preferences display as \"P#\",the higher the P, the more interested the reviewer is in the topic.</p>";
             }
@@ -1120,11 +1395,8 @@ class Assign_Page {
 
             $this->conf->ensure_cached_user_collaborators();
             
-            // Print recommended reviewers section
-            $this->print_recommended_reviewers($recommended_data, $acs);
-            
-            // Print all reviewers section (initially hidden)
-            $this->print_all_reviewers($recommended_data['all'], $acs, $recommended_data['auto_assigned']);
+            // Print unified reviewers section
+            $this->print_all_reviewers_unified($recommended_data, $acs);
 
             echo "</div>\n",
                 '<div class="aab">',
@@ -1225,3 +1497,4 @@ class Assign_Page {
         $ap->print();
     }
 }
+
