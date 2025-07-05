@@ -767,9 +767,22 @@ class PaperList {
 
     /** @return string */
     function unparse_baseline_view() {
-        if ($this->_report_id === "pl"
-            && ($f = $this->conf->review_form()->default_highlighted_score())) {
-            return "show:" . $f->search_keyword();
+        if ($this->_report_id === "pl") {
+            $baseline = [];
+            
+            // Add default review score
+            if (($f = $this->conf->review_form()->default_highlighted_score())) {
+                $baseline[] = "show:" . $f->search_keyword();
+            }
+            
+            // Add default display options: row numbers, track, metareviewer
+            $baseline[] = "show:rownum";
+            if ($this->conf->has_tracks()) {
+                $baseline[] = "show:track";
+            }
+            $baseline[] = "show:metareviewer";
+            
+            return join(" ", $baseline);
         }
         return "";
     }

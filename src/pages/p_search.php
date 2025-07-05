@@ -92,6 +92,11 @@ class Search_Page {
             $this->checkbox_item(1, "rownum", "Row numbers");
         }
 
+        // Track
+        if ($this->conf->has_tracks() && $pl->has("track")) {
+            $this->checkbox_item(1, "track", "Track");
+        }
+
         // Options
         foreach ($this->conf->options() as $ox) {
             if ($ox->search_keyword() !== false

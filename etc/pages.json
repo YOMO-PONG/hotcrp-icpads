@@ -85,7 +85,6 @@
         "print_function": "Home_Page::print_info_sidebar"
     },
     [   "home/sidebar/info/deadline", 10, "Home_Page::print_info_deadline"   ],
-    [   "home/sidebar/info/pc", 20, "Home_Page::print_info_pc"   ],
     [   "home/sidebar/info/site", 30, "Home_Page::print_info_site"   ],
     {
         "name": "home/sidebar/info/accepted", "order": 40,

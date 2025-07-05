@@ -49,7 +49,6 @@ class Assign_Page {
         }
     }
 
-
     function handle_pc_update() {
         $reviewer = $this->qreq->reviewer;
         
@@ -67,11 +66,31 @@ class Assign_Page {
         }
 
         $prow = $this->prow;
+        $paper_track = $this->get_paper_track_tag($prow);
         $t = ["paper,action,email,round,conflict\n"];
+        
         foreach ($this->conf->pc_members() as $cid => $p) {
             if ($reviewer
                 && strcasecmp($p->email, $reviewer) != 0
                 && (string) $p->contactId !== $reviewer) {
+                continue;
+            }
+
+            // Apply track filtering - only allow operations on track members/chairs
+            $is_trackchair = $this->is_track_chair($p, $paper_track);
+            
+            // Skip PC Chair only if they are not also a track chair
+            if ($p->privChair && !$is_trackchair) {
+                continue;
+            }
+            
+            // Check if PC member is assignable to this track
+            if (!$p->pc_track_assignable($prow) && !$prow->has_reviewer($p) && !$is_trackchair) {
+                continue;
+            }
+            
+            // Filter by track membership if paper has a track, but always include track chairs
+            if ($paper_track && !$this->is_track_member($p, $paper_track) && !$is_trackchair) {
                 continue;
             }
 
@@ -1266,8 +1285,6 @@ class Assign_Page {
 </script>';
     }
 
-
-
     function print() {
         $prow = $this->prow;
         $user = $this->user;
@@ -1343,16 +1360,39 @@ class Assign_Page {
             
             if ($has_existing_assignments) {
                 // If assignments already exist, don't show recommendations
-                // But still filter out conflicted PC members
+                // But still filter out conflicted PC members AND apply track filtering
                 $filtered_pc = [];
+                $paper_track = $this->get_paper_track_tag($prow);
+                
                 foreach ($this->conf->pc_members() as $pc) {
+                    // Include track chairs for this paper's track
+                    $is_trackchair = $this->is_track_chair($pc, $paper_track);
+                    
+                    // Skip PC Chair only if they are not also a track chair
+                    if ($pc->privChair && !$is_trackchair) {
+                        continue;
+                    }
+                    
+                    // Check if PC member is assignable to this track
+                    if (!$pc->pc_track_assignable($prow) && !$prow->has_reviewer($pc) && !$is_trackchair) {
+                        continue;
+                    }
+                    
+                    // Filter by track membership if paper has a track, but always include track chairs
+                    if ($paper_track && !$this->is_track_member($pc, $paper_track) && !$is_trackchair) {
+                        continue;
+                    }
+                    
                     $conflict_type = $prow->conflict_type($pc);
                     $is_conflicted = Conflict::is_conflicted($conflict_type) || Conflict::is_author($conflict_type);
                     $has_potential_conflict = $prow->potential_conflict($pc);
                     
-                    if (!$is_conflicted && !$has_potential_conflict) {
-                        $filtered_pc[] = $pc;
+                    // Skip conflicted reviewers and those with potential conflicts
+                    if ($is_conflicted || $has_potential_conflict) {
+                        continue;
                     }
+                    
+                    $filtered_pc[] = $pc;
                 }
                 
                 $recommended_data = [
