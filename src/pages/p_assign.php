@@ -433,8 +433,9 @@ class Assign_Page {
     }
 
     /** @param Contact $pc
-     * @param AssignmentCountSet $acs */
-    private function print_pc_assignment($pc, $acs, $auto_assigned = [], $reviewer_data = null, $is_assigned = false, $is_recommended = false) {
+     * @param AssignmentCountSet $acs 
+     * @param AssignmentCountSet $track_acs */
+    private function print_pc_assignment($pc, $acs, $track_acs = null, $auto_assigned = [], $reviewer_data = null, $is_assigned = false, $is_recommended = false) {
         // first, name and assignment
         $ct = $this->prow->conflict_type($pc);
         $rrow = $this->prow->review_by_user($pc);
@@ -522,7 +523,7 @@ class Assign_Page {
         echo '<span class="topic-score">' . $topic_score . '</span>';
         echo '</div>';
         
-        // Review count column
+        // Global Review count column
         echo '<div class="reviewer-count-col">';
         $ac = $acs->get($pc->contactId);
         if ($ac->rev === 0) {
@@ -548,6 +549,23 @@ class Assign_Page {
                     $this->conf->hoturl("search", "q=pri:" . urlencode($pc->email)),
                     "\">{$ac->pri} pri</a>)</small>";
             }
+        }
+        echo '</div>';
+        
+        // Track Review count column
+        echo '<div class="reviewer-track-count-col">';
+        if ($track_acs) {
+            $track_ac = $track_acs->get($pc->contactId);
+            if ($track_ac->rev === 0) {
+                echo "0";
+            } else {
+                echo '<span class="track-review-count" title="Reviews in this track">', $track_ac->rev, '</span>';
+                if ($track_ac->pri && $track_ac->pri < $track_ac->rev) {
+                    echo '<br><small>(', $track_ac->pri, ' pri)</small>';
+                }
+            }
+        } else {
+            echo "-";
         }
         echo '</div>';
         
@@ -647,13 +665,13 @@ class Assign_Page {
             $all_pc[] = $pc;
         }
         
-        // Enhanced sorting: topic score (descending), review count (ascending), preference (descending)
+        // Enhanced sorting: topic score (descending), global review count (ascending), preference (descending)
         uasort($reviewer_data, function($a, $b) {
             // 1. First sort by topic score (higher score first)
             $score_cmp = $b['score'] <=> $a['score'];
             if ($score_cmp !== 0) return $score_cmp;
             
-            // 2. Then sort by review count (lower count first)
+            // 2. Then sort by global review count (lower count first) - this ensures less loaded reviewers are prioritized
             $count_cmp = $a['review_count'] <=> $b['review_count'];
             if ($count_cmp !== 0) return $count_cmp;
             
@@ -752,12 +770,17 @@ class Assign_Page {
     /**
      * Print the recommended reviewers section
      * @param array $recommended_data Result from get_recommended_reviewers()
-     * @param AssignmentCountSet $acs
+     * @param AssignmentCountSet $acs Global assignment count set
+     * @param AssignmentCountSet $track_acs Track-specific assignment count set
      */
-    private function print_all_reviewers_unified($recommended_data, $acs) {
+    private function print_all_reviewers_unified($recommended_data, $acs, $track_acs = null) {
         $recommended = $recommended_data['recommended'];
         $all_reviewers = $recommended_data['all'];
         $scores = $recommended_data['scores'];
+        
+        // Get paper track information for display
+        $paper_track = $this->get_paper_track_tag($this->prow);
+        $track_display_name = $paper_track ? htmlspecialchars($this->get_track_display_name($paper_track)) : "default";
         
         echo '<div id="unified-reviewer-view">',
             '<div class="flex-container mb-3">',
@@ -778,7 +801,7 @@ class Assign_Page {
             echo '<div class="info-panel mb-3">',
                 '<div class="flex-container">',
                 '<div class="no-recommendation-info">',
-                '<span class="info-text">Assignments already exist - showing all PC members for review management</span>',
+                '<span class="info-text">Assignments already exist - showing all PC members in the track of <strong>' . $track_display_name . '</strong> for review management</span>',
                 '</div>',
                 '</div>',
                 '</div>';
@@ -798,21 +821,26 @@ class Assign_Page {
             
             // Get all PC members with their data
             foreach ($all_reviewers as $pc) {
+                // Always use global assignment counts for review_count
+                $global_review_count = $acs ? $acs->get($pc->contactId)->rev : 0;
+                
                 // If scores are empty (no recommendations), calculate data on the fly
                 if (empty($scores)) {
                     $reviewer_info = [
                         'score' => $this->prow->topic_interest_score($pc),
                         'conflict' => false,
-                        'review_count' => $acs ? $acs->get($pc->contactId)->rev : 0,
+                        'review_count' => $global_review_count,
                         'is_trackchair' => $this->is_track_chair($pc, $this->get_paper_track_tag($this->prow))
                     ];
                 } else {
                     $reviewer_info = $scores[$pc->contactId] ?? [
                         'score' => $this->prow->topic_interest_score($pc),
                         'conflict' => false,
-                        'review_count' => $acs ? $acs->get($pc->contactId)->rev : 0,
+                        'review_count' => $global_review_count,
                         'is_trackchair' => $this->is_track_chair($pc, $this->get_paper_track_tag($this->prow))
                     ];
+                    // Ensure we use the global review count
+                    $reviewer_info['review_count'] = $global_review_count;
                 }
                 
                 // Check if currently assigned
@@ -834,8 +862,13 @@ class Assign_Page {
                 if ($a['sort_priority'] !== $b['sort_priority']) {
                     return $a['sort_priority'] <=> $b['sort_priority'];
                 }
-                // Within same priority, sort by topic score
-                return $b['reviewer_info']['score'] <=> $a['reviewer_info']['score'];
+                // Within same priority, sort by topic score first
+                $score_cmp = $b['reviewer_info']['score'] <=> $a['reviewer_info']['score'];
+                if ($score_cmp !== 0) {
+                    return $score_cmp;
+                }
+                // If topic scores are equal, sort by global review count (ascending - fewer reviews first)
+                return $a['reviewer_info']['review_count'] <=> $b['reviewer_info']['review_count'];
             });
             
             // List header
@@ -843,7 +876,8 @@ class Assign_Page {
                 '<div class="reviewer-list-header">',
                 '<div class="reviewer-name-header">Name</div>',
                 '<div class="reviewer-score-header">Topic Score</div>',
-                '<div class="reviewer-count-header">Reviews</div>',
+                '<div class="reviewer-count-header">Global Reviews</div>',
+                '<div class="reviewer-track-count-header">Track Reviews</div>',
                 '<div class="reviewer-assign-header">Assignment</div>',
                 '</div>';
                 
@@ -852,6 +886,7 @@ class Assign_Page {
                 $this->print_pc_assignment(
                     $data['contact'], 
                     $acs, 
+                    $track_acs,
                     [], // no auto_assigned needed
                     $data['reviewer_info'],
                     $data['is_assigned'],
@@ -881,7 +916,7 @@ class Assign_Page {
 
 .reviewer-list-header {
     display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1.5fr;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1.5fr;
     gap: 1rem;
     background: #f8f9fa;
     padding: 0.75rem;
@@ -897,7 +932,7 @@ class Assign_Page {
 
 .reviewer-list-row {
     display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1.5fr;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1.5fr;
     gap: 1rem;
     padding: 0.75rem;
     border-bottom: 1px solid #eee;
@@ -950,6 +985,19 @@ class Assign_Page {
 
 .reviewer-count-col {
     text-align: center;
+}
+
+.reviewer-track-count-col {
+    text-align: center;
+}
+
+.track-review-count {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.85em;
+    font-weight: bold;
 }
 
 .high-workload {
@@ -1347,19 +1395,28 @@ class Assign_Page {
 
         // PC assignments
         if ($user->can_administer($prow)) {
-            $acs = AssignmentCountSet::load($user, AssignmentCountSet::HAS_REVIEW);
+            // Load global assignment counts (bypass permission restrictions)
+            $acs = $this->load_global_assignment_counts($user);
+            
+            // Load track-specific assignment count set
+            $paper_track = $this->get_paper_track_tag($prow);
+            $track_acs = null;
+            if ($paper_track) {
+                $track_acs = $this->load_track_assignment_counts($user, $paper_track);
+            }
 
-            // Only recommend reviewers if no assignments exist yet
-            $has_existing_assignments = false;
+            // Only recommend reviewers if no PRIMARY assignments exist yet
+            // Meta reviewers don't prevent primary reviewer recommendations
+            $has_existing_primary_assignments = false;
             foreach ($prow->all_reviews() as $rrow) {
-                if ($rrow->reviewType > 0) {
-                    $has_existing_assignments = true;
+                if ($rrow->reviewType == REVIEW_PRIMARY || $rrow->reviewType == REVIEW_SECONDARY) {
+                    $has_existing_primary_assignments = true;
                     break;
                 }
             }
             
-            if ($has_existing_assignments) {
-                // If assignments already exist, don't show recommendations
+            if ($has_existing_primary_assignments) {
+                // If primary assignments already exist, don't show recommendations
                 // But still filter out conflicted PC members AND apply track filtering
                 $filtered_pc = [];
                 $paper_track = $this->get_paper_track_tag($prow);
@@ -1401,8 +1458,9 @@ class Assign_Page {
                     'scores' => []
                 ];
             } else {
-                // Get recommended reviewers data (limit to 3) only for new papers
-                $recommended_data = $this->get_recommended_reviewers(3, true, $acs);
+                // Get recommended reviewers data (limit to 4) even if meta reviewers exist
+                // This ensures primary reviewer recommendations are shown even after meta reviewer assignment
+                $recommended_data = $this->get_recommended_reviewers(4, true, $acs);
             }
             
             // Get paper track for JavaScript
@@ -1425,6 +1483,25 @@ class Assign_Page {
                 echo "<p>Review preferences display as \"P#\",the higher the P, the more interested the reviewer is in the topic.</p>";
             }
 
+            // Add explanation for table headers
+            echo '<div class="table-headers-explanation mb-3" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff;">',
+                '<h4 style="margin: 0 0 8px 0; font-size: 1em; color: #495057;">Column Explanations:</h4>',
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.9em; color: #6c757d;">',
+                '<div>',
+                '<strong>Topic Score:</strong> Numerical score indicating how well the reviewer\'s research interests match this paper\'s topics. Higher scores indicate better topic alignment.',
+                '</div>',
+                '<div>',
+                '<strong>Global Reviews:</strong> Total number of reviews this reviewer has been assigned across all tracks in the conference. Used to assess overall workload.',
+                '</div>',
+                '<div>',
+                '<strong>Track Reviews:</strong> Number of reviews this reviewer has been assigned specifically within this paper\'s track. Indicates track-specific experience.',
+                '</div>',
+                '<div>',
+                '<strong>Assignment:</strong> Current review assignment status for this paper. Options include None, Primary, Metareview, or Conflict.',
+                '</div>',
+                '</div>',
+                '</div>';
+
             // Embed reviewer data and paper track for JavaScript
             echo '<script>window.reviewerData = ', json_encode($recommended_data['scores']), ';</script>';
             echo '<script>window.paperTrack = ', json_encode($paper_track), ';</script>';
@@ -1436,7 +1513,7 @@ class Assign_Page {
             $this->conf->ensure_cached_user_collaborators();
             
             // Print unified reviewers section
-            $this->print_all_reviewers_unified($recommended_data, $acs);
+            $this->print_all_reviewers_unified($recommended_data, $acs, $track_acs);
 
             echo "</div>\n",
                 '<div class="aab">',
@@ -1535,6 +1612,110 @@ class Assign_Page {
         $ap->assign_load();
         $ap->handle_request();
         $ap->print();
+    }
+
+    /** @return array<string,string> */
+    private function build_track_name_mapping() {
+        // Track display names mapping - can be maintained here or loaded from config
+        $track_display_names = [
+            'cloud-edge' => 'Cloud & Edge Computing',
+            'wsmc' => 'Wireless Sensing & Mobile Computing',
+            'ii-internet' => 'Industrial Informatics & Internet',
+            'infosec' => 'Information Security',
+            'sads' => 'System and Applied Data Science',
+            'big-data-fm' => 'Big Data & Foundation Models',
+            'aigc-mapc' => 'AIGC & Multi-Agent Parallel Computing',
+            'dist-storage' => 'Distributed Storage',
+            'ngm' => 'Next-Generation Mobile Networks and Connected Systems',
+            'rfa' => 'RF Computing and AIoT Application',
+            'dsui' => 'Distributed System and Ubiquitous Intelligence',
+            'wma' => 'Wireless and Mobile AIoT',
+            'bdmls' => 'Big Data and Machine Learning Systems',
+            'ncea' => 'SS:Networked Computing for Embodied AI',
+            'aimc' => 'Artificial Intelligence for Mobile Computing',
+            'idpm' => 'Intelligent Data Processing & Management',
+            'badv' => 'Blockchain & Activation of Data Value',
+            'mwt' => 'SS:Millimeter-Wave and Terahertz Sensing and Networks',
+            'idsia' => 'Interdisciplinary Distributed System and IoT Applications',
+            'spmus' => 'Security and Privacy in Mobile and Ubiquitous Systems',
+        ];
+
+        return $track_display_names;
+    }
+
+    /** @param string $track_tag @return string */
+    private function get_track_display_name($track_tag) {
+        $track_mapping = $this->build_track_name_mapping();
+        return $track_mapping[$track_tag] ?? $track_tag;
+    }
+
+    /**
+     * Load assignment counts for a specific track
+     * @param Contact $user
+     * @param string $track_tag
+     * @return AssignmentCountSet
+     */
+    private function load_track_assignment_counts(Contact $user, $track_tag) {
+        $acs = new AssignmentCountSet($user);
+        $acs->has = AssignmentCountSet::HAS_REVIEW;
+        
+        // Get all papers with the specific track tag
+        $search = new PaperSearch($user, "#{$track_tag}");
+        $paper_ids = $search->paper_ids();
+        
+        if (empty($paper_ids)) {
+            return $acs;
+        }
+        
+        // Query reviews for papers in this track
+        $paper_ids_str = join(",", $paper_ids);
+        $result = $user->conf->qe("select r.contactId, group_concat(r.reviewType separator '')
+                from PaperReview r
+                join Paper p on (p.paperId=r.paperId)
+                where r.reviewType>=" . REVIEW_PC . " 
+                and (r.reviewSubmitted>0 or r.timeApprovalRequested!=0 or p.timeSubmitted>0)
+                and p.paperId in ({$paper_ids_str})
+                group by r.contactId");
+                
+        while (($row = $result->fetch_row())) {
+            $ct = $acs->ensure((int) $row[0]);
+            $ct->rev = strlen($row[1]);
+            $ct->meta = substr_count($row[1], (string) REVIEW_META);
+            $ct->pri = substr_count($row[1], (string) REVIEW_PRIMARY);
+            $ct->sec = substr_count($row[1], (string) REVIEW_SECONDARY);
+        }
+        Dbl::free($result);
+        
+        return $acs;
+    }
+
+    /**
+     * Load global assignment counts without permission restrictions
+     * @param Contact $user
+     * @return AssignmentCountSet
+     */
+    private function load_global_assignment_counts(Contact $user) {
+        $acs = new AssignmentCountSet($user);
+        $acs->has = AssignmentCountSet::HAS_REVIEW;
+        
+        // Query all reviews globally, bypassing permission restrictions
+        $result = $user->conf->qe("select r.contactId, group_concat(r.reviewType separator '')
+                from PaperReview r
+                join Paper p on (p.paperId=r.paperId)
+                where r.reviewType>=" . REVIEW_PC . " 
+                and (r.reviewSubmitted>0 or r.timeApprovalRequested!=0 or p.timeSubmitted>0)
+                group by r.contactId");
+                
+        while (($row = $result->fetch_row())) {
+            $ct = $acs->ensure((int) $row[0]);
+            $ct->rev = strlen($row[1]);
+            $ct->meta = substr_count($row[1], (string) REVIEW_META);
+            $ct->pri = substr_count($row[1], (string) REVIEW_PRIMARY);
+            $ct->sec = substr_count($row[1], (string) REVIEW_SECONDARY);
+        }
+        Dbl::free($result);
+        
+        return $acs;
     }
 }
 
