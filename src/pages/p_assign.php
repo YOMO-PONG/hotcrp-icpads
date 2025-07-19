@@ -1458,9 +1458,9 @@ class Assign_Page {
                     'scores' => []
                 ];
             } else {
-                // Get recommended reviewers data (limit to 4) even if meta reviewers exist
+                // Get recommended reviewers data (limit to 3) even if meta reviewers exist
                 // This ensures primary reviewer recommendations are shown even after meta reviewer assignment
-                $recommended_data = $this->get_recommended_reviewers(4, true, $acs);
+                $recommended_data = $this->get_recommended_reviewers(3, true, $acs);
             }
             
             // Get paper track for JavaScript

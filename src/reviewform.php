@@ -592,14 +592,26 @@ Ready\n";
         echo '<hr class="c">';
         echo "<table class=\"revoff\"><tr>
       <td><strong>Offline reviewing</strong> &nbsp;</td>
-      <td>Upload form: &nbsp; <input class=\"ignore-diff\" type=\"file\" name=\"file\" accept=\"text/plain\" size=\"30\">
+      <td>Upload form: &nbsp; 
+        <div class=\"custom-file-upload\">
+          <input class=\"ignore-diff\" type=\"file\" name=\"file\" accept=\"text/plain\" size=\"30\" id=\"review-file-input\" style=\"display: none;\">
+          <button type=\"button\" class=\"btn btn-secondary\" onclick=\"document.getElementById('review-file-input').click();\">Choose File</button>
+          <span id=\"review-file-name\" class=\"ml-2 text-muted\">No file chosen</span>
+        </div>
       &nbsp; ", Ht::submit("upload", "Go"), "</td>
     </tr><tr>
       <td></td>
       <td><a href=\"$reviewDownloadLink\">Download form</a>
       <span class=\"barsep\">·</span>
       <span class=\"hint\"><strong>Tip:</strong> Use <a href=\"", $this->conf->hoturl("search"), "\">Search</a> or <a href=\"", $this->conf->hoturl("offline"), "\">Offline reviewing</a> to download or upload many forms at once.</span></td>
-    </tr></table></div>\n";
+    </tr></table>
+    <script>
+    document.getElementById('review-file-input').addEventListener('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        document.getElementById('review-file-name').textContent = fileName;
+    });
+    </script>
+    </div>\n";
 
         if (!empty($rrow->message_list)) {
             echo '<div class="revcard-feedback">',

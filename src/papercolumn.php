@@ -894,6 +894,61 @@ class Score_PaperColumn extends ScoreGraph_PaperColumn {
         $this->format_field = $conf->checked_review_field($cj->review_field_id);
         assert($this->format_field instanceof Discrete_ReviewField);
     }
+    
+    function content(PaperList $pl, PaperInfo $row) {
+        // 对rec列显示文字，对OveMer和RevExp列显示数字
+        if ($this->format_field->short_id === "rec" || $this->format_field->search_keyword() === "rec" || $this->format_field->short_id === "s03" || $this->format_field->name === "recommendation") {
+            // rec列显示文字值
+            $values = [];
+            $f = $this->format_field;
+            $row->ensure_review_field_order($f->order);
+            
+            foreach ($row->viewable_reviews_as_display($pl->user) as $rrow) {
+                if ($rrow->reviewSubmitted && ($fv = $rrow->fval($f)) !== null && $fv > 0) {
+                    // 对于推荐字段，从values数组获取文字值
+                    if ($f instanceof DiscreteValues_ReviewField) {
+                        $field_values = $f->values();
+                        if (isset($field_values[$fv - 1])) {
+                            $text_value = $field_values[$fv - 1];
+                            if ($text_value !== "" && $text_value !== null) {
+                                $values[] = htmlspecialchars($text_value);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (empty($values)) {
+                return "";
+            }
+            
+            // 显示文字值，多个值用逗号分隔
+            return implode(", ", array_unique($values));
+        } else if ($this->format_field->short_id === "s01" || $this->format_field->name === "Overall merit" ||
+                   $this->format_field->short_id === "s02" || $this->format_field->name === "Reviewer expertise") {
+            // OveMer和RevExp列显示数字值
+            $values = [];
+            $f = $this->format_field;
+            $row->ensure_review_field_order($f->order);
+            
+            foreach ($row->viewable_reviews_as_display($pl->user) as $rrow) {
+                if ($rrow->reviewSubmitted && ($fv = $rrow->fval($f)) !== null && $fv > 0) {
+                    // 直接显示数字分数值
+                    $values[] = $fv;
+                }
+            }
+            
+            if (empty($values)) {
+                return "";
+            }
+            
+            // 显示分数值，多个值用斜杠分隔
+            return implode("/", $values);
+        }
+        
+        // 对于其他列，使用默认的方块图形渲染
+        return parent::content($pl, $row);
+    }
     function prepare(PaperList $pl, $visible) {
         $bound = $pl->user->permissive_view_score_bound($pl->search->limit_term()->is_author());
         if ($this->format_field->view_score <= $bound) {

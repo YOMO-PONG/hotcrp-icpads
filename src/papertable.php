@@ -2535,7 +2535,8 @@ class PaperTable {
         $user = $this->user;
         $prow = $this->prow;
         $conf = $prow->conf;
-        $subrev = [];
+        $meta_reviews = [];
+        $other_reviews = [];
         $cflttype = $user->view_conflict_type($prow);
         $allow_actas = $user->privChair && $user->allow_administer($prow);
         $hideUnviewable = ($cflttype > 0 && !$this->admin)
@@ -2547,7 +2548,7 @@ class PaperTable {
                                   $conf->review_form()->forder);
         $last_pc_reviewer = -1;
 
-        // actual rows
+        // separate meta reviews from other reviews
         foreach ($this->all_rrows as $rr) {
             $canView = $user->can_view_review($prow, $rr);
 
@@ -2561,169 +2562,187 @@ class PaperTable {
                 continue;
             }
 
-            $tclass = "";
-            $isdelegate = $rr->is_subreview() && $rr->requestedBy === $last_pc_reviewer;
-            if ($rr->reviewStatus < ReviewInfo::RS_COMPLETED && $isdelegate) {
-                $tclass .= ($tclass ? " " : "") . "rldraft";
-            }
-            if ($rr->reviewType >= REVIEW_PC) {
-                $last_pc_reviewer = +$rr->contactId;
-            }
-
-            // review ID
-            $id = $rr->status_title(true);
-            if ($rr->reviewOrdinal && !$isdelegate) {
-                $id .= " #" . $rr->unparse_ordinal_id();
-            }
-            if ($rr->reviewStatus < ReviewInfo::RS_APPROVED
-                && !$rr->is_ghost()) {
-                $d = $rr->status_description();
-                if ($d === "draft") {
-                    $id = "Draft " . $id;
-                } else {
-                    $id .= " (" . $d . ")";
-                }
-            }
-            $rlink = $rr->unparse_ordinal_id();
-
-            $t = '<td class="rl nw">';
-            if (!$canView
-               || ($rr->reviewStatus < ReviewInfo::RS_DRAFTED && !$user->can_edit_review($prow, $rr))) {
-                $t .= $id;
+            if ($rr->reviewType === REVIEW_META) {
+                $meta_reviews[] = $rr;
             } else {
-                if ((!$this->can_view_reviews
-                     || $rr->reviewStatus < ReviewInfo::RS_APPROVED)
-                    && $user->can_edit_review($prow, $rr)) {
-                    $link = $prow->reviewurl(["r" => $rlink]);
-                } else if ($this->qreq->page() === "paper") {
-                    $link = "#r{$rlink}";
-                } else {
-                    $link = $prow->hoturl(["#" => "r{$rlink}"]);
-                }
-                $t .= '<a href="' . $link . '">' . $id . '</a>';
-                if ($show_ratings
-                    && $user->can_view_review_ratings($prow, $rr)
-                    && ($ratings = $rr->ratings())) {
-                    $all = 0;
-                    foreach ($ratings as $r) {
-                        $all |= $r;
-                    }
-                    if ($all & 126) {
-                        $t .= " &#x2691;";
-                    } else if ($all & 1) {
-                        $t .= " &#x2690;";
-                    }
-                }
+                $other_reviews[] = $rr;
             }
-            $t .= '</td>';
-
-            // primary/secondary glyph
-            $rtype = "";
-            if ($rr->reviewType > 0 && $user->can_view_review_meta($prow, $rr)) {
-                $rtype = $rr->icon_h() . $rr->round_h();
-            }
-
-            // reviewer identity
-            $showtoken = $rr->reviewToken && $user->can_edit_review($prow, $rr);
-            if (!$user->can_view_review_identity($prow, $rr)) {
-                $t .= $rtype ? "<td class=\"rl\">{$rtype}</td>" : '<td></td>';
-            } else {
-                $reviewer = $rr->reviewer();
-                if ($showtoken && Contact::is_anonymous_email($reviewer->email)) {
-                    $n = "[Token " . encode_token($rr->reviewToken) . "]";
-                    if ($user->is_my_review($rr)) {
-                        $n = "<span class=\"my-mention\" title=\"You have this review token\">{$n}</span>";
-                    }
-                } else {
-                    $n = $user->reviewer_extended_html_for($rr);
-                }
-                if ($allow_actas) {
-                    $n .= $this->_review_table_actas($reviewer);
-                }
-                
-                // 添加邮件通知按钮 - 为管理员和分配页面显示
-                if ($this->mode === "assign" && ($user->privChair || $user->can_administer($prow)) && $rr->reviewType > 0) {
-                    // 检查是否已通知过这个审稿人
-                    $is_notified = $rr->timeRequestNotified > 0 && $rr->timeRequestNotified >= $rr->timeRequested;
-                    $notification_status = $is_notified ? "Notified" : "Not notified";
-                    $notification_class = $is_notified ? "success" : "warning";
-                    $notification_icon = $is_notified ? "✓" : "📧";
-                    
-                    // 构建邮件链接 - 直接跳转到邮件模板页面，并预填审稿人信息
-                    $mail_url = $conf->hoturl("mail", [
-                        "template" => "newpcrev",
-                        "p" => $prow->paperId, 
-                        "reviewer" => $reviewer->email
-                    ]);
-                    
-                    // 添加通知状态和邮件按钮
-                    $n .= ' <span class="review-notification-status">';
-                    $n .= '<span class="badge badge-' . $notification_class . ' badge-sm" title="Notification Status: ' . $notification_status . ' (Type: ' . $rr->reviewType . ')">' . $notification_icon . '</span>';
-                    $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Send email notification to reviewer">';
-                    $n .= '<span style="text-decoration: none;">📧</span>';
-                    $n .= '</a>';
-                    $n .= '</span>';
-                }
-                
-                $rtypex = $rtype ? " {$rtype}" : "";
-                $t .= "<td class=\"rl\">{$n}{$rtypex}</td>";
-            }
-
-            // requester
-            if ($this->mode === "assign") {
-                if ($rr->reviewType < REVIEW_SECONDARY
-                    && !$showtoken
-                    && $rr->requestedBy
-                    && $rr->requestedBy !== $rr->contactId
-                    && $user->can_view_review_requester($prow, $rr)) {
-                    $t .= '<td class="rl small">requested by ';
-                    if ($rr->requestedBy === $user->contactId) {
-                        $t .= "you";
-                    } else {
-                        $t .= $user->reviewer_html_for($rr->requestedBy);
-                    }
-                    $t .= '</td>';
-                    $want_requested_by = true;
-                } else {
-                    $t .= '<td></td>';
-                }
-            }
-
-            // scores
-            $scores = [];
-            if ($canView
-                && ($want_scores || ($user->is_owned_review($rr) && $this->mode === "re"))) {
-                $view_score = $user->view_score_bound($prow, $rr);
-                foreach ($conf->review_form()->forder as $f) {
-                    if ($f->view_score > $view_score
-                        && ($fv = $rr->fval($f)) !== null
-                        && ($fh = $f->unparse_span_html($fv)) !== "") {
-                        if ($score_header[$f->short_id] === "") {
-                            $score_header[$f->short_id] = '<th class="rlscore">' . $f->web_abbreviation() . "</th>";
-                        }
-                        $scores[$f->short_id] = '<td class="rlscore need-tooltip" data-rf="' . $f->uid() . "\" data-tooltip-info=\"rf-score\">{$fh}</td>";
-                    }
-                }
-            }
-
-            // affix
-            $subrev[] = [$tclass, $t, $scores];
         }
 
-        // completion
-        if (!empty($subrev)) {
-            if ($want_requested_by) {
-                array_unshift($score_header, '<th class="rl"></th>');
+        // process reviews function (pass score_header by reference to share between meta and other reviews)
+        $process_reviews = function($rrows, &$score_header_ref) use ($user, $prow, $conf, $allow_actas, $show_ratings, $want_scores, $want_requested_by, &$last_pc_reviewer) {
+            $subrev = [];
+            
+            foreach ($rrows as $rr) {
+                $tclass = "";
+                $isdelegate = $rr->is_subreview() && $rr->requestedBy === $last_pc_reviewer;
+                if ($rr->reviewStatus < ReviewInfo::RS_COMPLETED && $isdelegate) {
+                    $tclass .= ($tclass ? " " : "") . "rldraft";
+                }
+                if ($rr->reviewType >= REVIEW_PC) {
+                    $last_pc_reviewer = +$rr->contactId;
+                }
+
+                // review ID
+                $id = $rr->status_title(true);
+                if ($rr->reviewOrdinal && !$isdelegate) {
+                    $id .= " #" . $rr->unparse_ordinal_id();
+                }
+                if ($rr->reviewStatus < ReviewInfo::RS_APPROVED
+                    && !$rr->is_ghost()) {
+                    $d = $rr->status_description();
+                    if ($d === "draft") {
+                        $id = "Draft " . $id;
+                    } else {
+                        $id .= " (" . $d . ")";
+                    }
+                }
+                $rlink = $rr->unparse_ordinal_id();
+
+                $t = '<td class="rl nw">';
+                if (!$user->can_view_review($prow, $rr)
+                   || ($rr->reviewStatus < ReviewInfo::RS_DRAFTED && !$user->can_edit_review($prow, $rr))) {
+                    $t .= $id;
+                } else {
+                    if ((!$this->can_view_reviews
+                         || $rr->reviewStatus < ReviewInfo::RS_APPROVED)
+                        && $user->can_edit_review($prow, $rr)) {
+                        $link = $prow->reviewurl(["r" => $rlink]);
+                    } else if ($this->qreq->page() === "paper") {
+                        $link = "#r{$rlink}";
+                    } else {
+                        $link = $prow->hoturl(["#" => "r{$rlink}"]);
+                    }
+                    $t .= '<a href="' . $link . '">' . $id . '</a>';
+                    if ($show_ratings
+                        && $user->can_view_review_ratings($prow, $rr)
+                        && ($ratings = $rr->ratings())) {
+                        $all = 0;
+                        foreach ($ratings as $r) {
+                            $all |= $r;
+                        }
+                        if ($all & 126) {
+                            $t .= " &#x2691;";
+                        } else if ($all & 1) {
+                            $t .= " &#x2690;";
+                        }
+                    }
+                }
+                $t .= '</td>';
+
+                // primary/secondary glyph
+                $rtype = "";
+                if ($rr->reviewType > 0 && $user->can_view_review_meta($prow, $rr)) {
+                    $rtype = $rr->icon_h() . $rr->round_h();
+                }
+
+                // reviewer identity
+                $showtoken = $rr->reviewToken && $user->can_edit_review($prow, $rr);
+                if (!$user->can_view_review_identity($prow, $rr)) {
+                    $t .= $rtype ? "<td class=\"rl\">{$rtype}</td>" : '<td></td>';
+                } else {
+                    $reviewer = $rr->reviewer();
+                    if ($showtoken && Contact::is_anonymous_email($reviewer->email)) {
+                        $n = "[Token " . encode_token($rr->reviewToken) . "]";
+                        if ($user->is_my_review($rr)) {
+                            $n = "<span class=\"my-mention\" title=\"You have this review token\">{$n}</span>";
+                        }
+                    } else {
+                        $n = $user->reviewer_extended_html_for($rr);
+                    }
+                    if ($allow_actas) {
+                        $n .= $this->_review_table_actas($reviewer);
+                    }
+                    
+                    // 添加邮件通知按钮 - 为管理员和分配页面显示
+                    if ($this->mode === "assign" && ($user->privChair || $user->can_administer($prow)) && $rr->reviewType > 0) {
+                        // 检查是否已通知过这个审稿人
+                        $is_notified = $rr->timeRequestNotified > 0 && $rr->timeRequestNotified >= $rr->timeRequested;
+                        $notification_status = $is_notified ? "Notified" : "Not notified";
+                        $notification_class = $is_notified ? "success" : "warning";
+                        $notification_icon = $is_notified ? "✓" : "📧";
+                        
+                        // 构建邮件链接 - 直接跳转到邮件模板页面，并预填审稿人信息
+                        $mail_url = $conf->hoturl("mail", [
+                            "template" => "newpcrev",
+                            "p" => $prow->paperId, 
+                            "reviewer" => $reviewer->email
+                        ]);
+                        
+                        // 添加通知状态和邮件按钮
+                        $n .= ' <span class="review-notification-status">';
+                        $n .= '<span class="badge badge-' . $notification_class . ' badge-sm" title="Notification Status: ' . $notification_status . ' (Type: ' . $rr->reviewType . ')">' . $notification_icon . '</span>';
+                        $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Send email notification to reviewer">';
+                        $n .= '<span style="text-decoration: none;">📧</span>';
+                        $n .= '</a>';
+                        $n .= '</span>';
+                    }
+                    
+                    $rtypex = $rtype ? " {$rtype}" : "";
+                    $t .= "<td class=\"rl\">{$n}{$rtypex}</td>";
+                }
+
+                // requester
+                if ($this->mode === "assign") {
+                    if ($rr->reviewType < REVIEW_SECONDARY
+                        && !$showtoken
+                        && $rr->requestedBy
+                        && $rr->requestedBy !== $rr->contactId
+                        && $user->can_view_review_requester($prow, $rr)) {
+                        $t .= '<td class="rl small">requested by ';
+                        if ($rr->requestedBy === $user->contactId) {
+                            $t .= "you";
+                        } else {
+                            $t .= $user->reviewer_html_for($rr->requestedBy);
+                        }
+                        $t .= '</td>';
+                        $want_requested_by = true;
+                    } else {
+                        $t .= '<td></td>';
+                    }
+                }
+
+                // scores
+                $scores = [];
+                if ($user->can_view_review($prow, $rr)
+                    && ($want_scores || ($user->is_owned_review($rr) && $this->mode === "re"))) {
+                    $view_score = $user->view_score_bound($prow, $rr);
+                    foreach ($conf->review_form()->forder as $f) {
+                        if ($f->view_score > $view_score
+                            && ($fv = $rr->fval($f)) !== null
+                            && ($fh = $f->unparse_span_html($fv)) !== "") {
+                            if ($score_header_ref[$f->short_id] === "") {
+                                $score_header_ref[$f->short_id] = '<th class="rlscore">' . $f->web_abbreviation() . "</th>";
+                            }
+                            $scores[$f->short_id] = '<td class="rlscore need-tooltip" data-rf="' . $f->uid() . "\" data-tooltip-info=\"rf-score\">{$fh}</td>";
+                        }
+                    }
+                }
+
+                // affix
+                $subrev[] = [$tclass, $t, $scores];
             }
-            $score_header_text = join("", $score_header);
-            $t = "<div class=\"reinfotable-container demargin\"><div class=\"reinfotable remargin-left remargin-right relative\"><table class=\"reviewers nw";
+            
+            return $subrev;
+        };
+
+        // build table function
+        $build_table = function($subrev, $table_class = "", $score_header_for_table = null) use ($want_requested_by, $score_header) {
+            // Use passed score_header if provided, otherwise use the original
+            $score_header_to_use = $score_header_for_table ?: $score_header;
+            if (empty($subrev)) {
+                return "";
+            }
+
+            $score_header_text = join("", $score_header_to_use);
+            $t = "<div class=\"reinfotable-container demargin\"><div class=\"reinfotable remargin-left remargin-right relative\"><table class=\"reviewers nw{$table_class}";
             if ($score_header_text) {
                 $t .= " has-scores";
             }
             $t .= "\">";
             $nscores = 0;
             if ($score_header_text) {
-                foreach ($score_header as $x) {
+                foreach ($score_header_to_use as $x) {
                     $nscores += $x !== "" ? 1 : 0;
                 }
                 $t .= '<thead><tr><th colspan="2"></th>';
@@ -2736,7 +2755,7 @@ class PaperTable {
             foreach ($subrev as $r) {
                 $t .= '<tr class="rl' . ($r[0] ? " $r[0]" : "") . '">' . $r[1];
                 if ($r[2] ?? null) {
-                    foreach ($score_header as $fid => $header_needed) {
+                    foreach ($score_header_to_use as $fid => $header_needed) {
                         if ($header_needed !== "") {
                             $x = $r[2][$fid] ?? null;
                             $t .= $x ? : "<td class=\"rlscore rs_$fid\"></td>";
@@ -2747,10 +2766,55 @@ class PaperTable {
                 }
                 $t .= "</tr>";
             }
+            $t .= '</tbody></table></div></div>';
             
-            // 添加CSS样式支持
-            $t .= '</tbody></table>';
-            $t .= '<style>
+            return $t;
+        };
+
+        $result = "";
+
+        // 创建共享的score_header，确保两个表格使用相同的分数列头
+        $shared_score_header = $score_header;
+
+        // 处理Meta reviews并单独显示在上方
+        if (!empty($meta_reviews)) {
+            $meta_subrev = $process_reviews($meta_reviews, $shared_score_header);
+            if (!empty($meta_subrev)) {
+                $result .= "<div class=\"meta-reviews-section\"><h4 style=\"margin-bottom: 10px; color: #666; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;\">Meta Reviews</h4>";
+                $result .= $build_table($meta_subrev, "", $shared_score_header);
+                $result .= "</div>";
+            }
+        }
+
+        // 处理其他reviews
+        if (!empty($other_reviews)) {
+            $other_subrev = $process_reviews($other_reviews, $shared_score_header);
+            if (!empty($other_subrev)) {
+                if (!empty($meta_reviews)) {
+                    $result .= "<div class=\"other-reviews-section\" style=\"margin-top: 20px;\"><h4 style=\"margin-bottom: 10px; color: #666; font-size: 14px; font-weight: bold;\">Reviews</h4>";
+                } else {
+                    $result .= "<div class=\"other-reviews-section\">";
+                }
+                $result .= $build_table($other_subrev, "", $shared_score_header);
+                $result .= "</div>";
+            }
+        }
+
+        // 添加CSS样式支持（只保留必要的功能性样式）
+        if (!empty($result)) {
+            $result .= '<style>
+                .meta-reviews-section h4,
+                .other-reviews-section h4 {
+                    color: #666;
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 5px;
+                }
+                .other-reviews-section {
+                    margin-top: 20px;
+                }
                 .review-notification-status {
                     margin-left: 8px;
                     white-space: nowrap;
@@ -2781,11 +2845,9 @@ class PaperTable {
                     text-decoration: none;
                 }
             </style>';
-            
-            return $t . "</div></div>\n";
-        } else {
-            return "";
         }
+
+        return $result;
     }
 
     /** @return string */
@@ -3021,8 +3083,45 @@ class PaperTable {
                 $any_submitted = $any_submitted || $rrow->reviewStatus >= ReviewInfo::RS_COMPLETED;
             }
         }
+        
+        // Sort reviews to put Meta reviews first
+        usort($rcs, function($a, $b) {
+            // Meta reviews (type 5) come first
+            if ($a->reviewType === REVIEW_META && $b->reviewType !== REVIEW_META) {
+                return -1;
+            }
+            if ($b->reviewType === REVIEW_META && $a->reviewType !== REVIEW_META) {
+                return 1;
+            }
+            // For same type or both non-meta, maintain original order by reviewId
+            return $a->reviewId <=> $b->reviewId;
+        });
+        
         if ($comments && $this->mycrows) {
             $rcs = $this->prow->merge_reviews_and_comments($rcs, $this->mycrows);
+            
+            // After merging with comments, ensure Meta reviews are still first
+            // Extract Meta reviews and keep everything else in original order
+            $meta_reviews = [];
+            $other_rcs = [];
+            
+            foreach ($rcs as $rc) {
+                if (isset($rc->reviewId) && $rc->reviewType === REVIEW_META) {
+                    $meta_reviews[] = $rc;
+                } else {
+                    $other_rcs[] = $rc;
+                }
+            }
+            
+            // Sort Meta reviews by reviewId if there are multiple
+            if (count($meta_reviews) > 1) {
+                usort($meta_reviews, function($a, $b) {
+                    return $a->reviewId <=> $b->reviewId;
+                });
+            }
+            
+            // Rebuild the array with Meta reviews first, then everything else in original order
+            $rcs = array_merge($meta_reviews, $other_rcs);
         }
 
         $s = "";
