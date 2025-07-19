@@ -2654,28 +2654,41 @@ class PaperTable {
                         $n .= $this->_review_table_actas($reviewer);
                     }
                     
-                    // 添加邮件通知按钮 - 为管理员和分配页面显示
-                    if ($this->mode === "assign" && ($user->privChair || $user->can_administer($prow)) && $rr->reviewType > 0) {
-                        // 检查是否已通知过这个审稿人
-                        $is_notified = $rr->timeRequestNotified > 0 && $rr->timeRequestNotified >= $rr->timeRequested;
-                        $notification_status = $is_notified ? "Notified" : "Not notified";
-                        $notification_class = $is_notified ? "success" : "warning";
-                        $notification_icon = $is_notified ? "✓" : "📧";
-                        
-                        // 构建邮件链接 - 直接跳转到邮件模板页面，并预填审稿人信息
-                        $mail_url = $conf->hoturl("mail", [
-                            "template" => "newpcrev",
-                            "p" => $prow->paperId, 
-                            "reviewer" => $reviewer->email
-                        ]);
-                        
-                        // 添加通知状态和邮件按钮
-                        $n .= ' <span class="review-notification-status">';
-                        $n .= '<span class="badge badge-' . $notification_class . ' badge-sm" title="Notification Status: ' . $notification_status . ' (Type: ' . $rr->reviewType . ')">' . $notification_icon . '</span>';
-                        $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Send email notification to reviewer">';
-                        $n .= '<span style="text-decoration: none;">📧</span>';
-                        $n .= '</a>';
-                        $n .= '</span>';
+                    // 添加邮件通知按钮 - 为管理员在分配页面和论文页面显示
+                    if (($user->privChair || $user->can_administer($prow)) && $rr->reviewType > 0) {
+                        if ($this->mode === "assign") {
+                            // assign模式：显示通知状态和个人邮件按钮
+                            $is_notified = $rr->timeRequestNotified > 0 && $rr->timeRequestNotified >= $rr->timeRequested;
+                            $notification_status = $is_notified ? "Notified" : "Not notified";
+                            $notification_class = $is_notified ? "success" : "warning";
+                            $notification_icon = $is_notified ? "✓" : "📧";
+                            
+                            // 构建邮件链接 - 直接跳转到邮件模板页面，并预填审稿人信息
+                            $mail_url = $conf->hoturl("mail", [
+                                "template" => "newpcrev",
+                                "p" => $prow->paperId, 
+                                "reviewer" => $reviewer->email
+                            ]);
+                            
+                            // 添加通知状态和邮件按钮
+                            $n .= ' <span class="review-notification-status">';
+                            $n .= '<span class="badge badge-' . $notification_class . ' badge-sm" title="Notification Status: ' . $notification_status . ' (Type: ' . $rr->reviewType . ')">' . $notification_icon . '</span>';
+                            $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Send email notification to reviewer">';
+                            $n .= '<span style="text-decoration: none;">📧</span>';
+                            $n .= '</a>';
+                            $n .= '</span>';
+                        } else if ($this->mode === "p") {
+                            // p模式：简化的邮件按钮，预选所有审稿人
+                            $mail_url = $conf->hoturl("mail", [
+                                "template" => "reviewremind",
+                                "p" => $prow->paperId,
+                                "reviewer" => $reviewer->email
+                            ]);
+                            
+                            $n .= ' <a href="' . $mail_url . '" class="mail-reviewer-btn" title="Contact reviewers">';
+                            $n .= '<span style="text-decoration: none;">📧</span>';
+                            $n .= '</a>';
+                        }
                     }
                     
                     $rtypex = $rtype ? " {$rtype}" : "";
