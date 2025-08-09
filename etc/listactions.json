@@ -274,6 +274,24 @@
         "function": "+GetCSV_ListAction"
     },
     {
+        "name": "get/proposal", "get": true,
+        "title": "Track Proposal (CSV)",
+        "order": 10095,
+        "allow_if": "pc",
+        "allow_api": true,
+        "require": "src/listactions/la_getproposal.php",
+        "function": "+GetProposal_ListAction"
+    },
+    {
+        "name": "get/proposalxlsx", "get": true,
+        "title": "Track Proposal (XLSX)",
+        "order": 10096,
+        "allow_if": "pc",
+        "allow_api": true,
+        "require": "src/listactions/la_getproposalxlsx.php",
+        "function": "+GetProposalXlsx_ListAction"
+    },
+    {
         "name": "tag", "post": true,
         "render_function": "Tag_ListAction::render", "title": "Tag",
         "order": 500,
