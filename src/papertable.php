@@ -1995,6 +1995,20 @@ class PaperTable {
             && $viewable_decision->sign > 0) {
             if ($this->user->can_edit_paper($this->prow)) {
                 if (($t = $this->conf->_i("finalsubmit", new FmtArg("deadline", $this->deadline_setting_is("final_soft"))))) {
+                    // IEEE 版权表单动态链接处理
+                    if ($this->prow && $this->prow->paperId) {
+                        $paperId = $this->prow->paperId;
+                        // 替换 YOUR_PAPER_ID 为实际的论文ID
+                        $t = str_replace('YOUR_PAPER_ID', $paperId, $t);
+                        // 替换 /ieeeecf?p=YOUR_PAPER_ID 为实际链接
+                        $t = str_replace('/ieeeecf?p=YOUR_PAPER_ID', '/ieeeecf?p=' . $paperId, $t);
+                        // 替换 <code>/ieeeecf?p=YOUR_PAPER_ID</code> 
+                        $t = str_replace('<code>/ieeeecf?p=YOUR_PAPER_ID</code>', '<code>/ieeeecf?p=' . $paperId . '</code>', $t);
+                        // 创建一个可点击的链接替换示例链接
+                        $ieeeLink = '<a href="/ieeeecf?p=' . $paperId . '" target="_blank">► Complete IEEE Electronic Copyright Form</a>';
+                        $t = preg_replace('/To complete the IEEE Electronic Copyright Form:\s*<\/strong>\s*<\/p>\s*<blockquote>.*?<\/blockquote>/s', 
+                                         'To complete the IEEE Electronic Copyright Form:</strong></p><p>' . $ieeeLink . '</p>', $t);
+                    }
                     $this->_main_message(MessageSet::SUCCESS, "<5>" . $t);
                 }
             } else if ($this->mode === "edit") {
