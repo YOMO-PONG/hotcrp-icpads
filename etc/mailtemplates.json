@@ -56,7 +56,7 @@
 		"subject": "[{{CONFSHORTNAME}}] Welcome to the Program Committee",
 		"body": [
 			"Dear {{IF(USERTITLE)}}{{USERTITLE}} {{ENDIF}}{{NAME}},\n\n",
-			"On behalf of the Technical Program Committee, we would like to sincerely thank you for accepting our invitation to serve on the Program Committee for {{CONFNAME}} ({{CONFSHORTNAME}}). We are thrilled to have you on board and look forward to your valuable contributions. To get started, you will first need to set up your account on our submission site.\n\n",
+			"On behalf of the Technical Program Committee, we would like to sincerely thank you for accepting our invitation to serve on the Program Committee for {{CONFNAME}}. We are thrilled to have you on board and look forward to your valuable contributions. To get started, you will first need to set up your account on our submission site.\n\n",
 			"1. Activate Your Account\n",
 			"📧 Site: {{LINK}}\n",
 			"📧 Your Email: {{EMAIL}}\n",
@@ -68,7 +68,7 @@
 			"2. Action Required\n",
 			"After setting your password and logging in, please complete the following crucial steps as soon as possible:\n",
 			"✅ Update Your Profile: Make sure your affiliation and other personal information are up to date.\n",
-			"✅ Set Your Track and Topic Interests on the Profile Page: This is the most important initial step. As a TPC member, you can select multiple tracks (at least one required). You'll be assigned papers from your chosen tracks, each containing various topics. Please indicate your interest level in these topics to help us best match papers to your expertise. To date, {{CONFSHORTNAME}} features a number of regular tracks along with several special sessions. Detailed track information and Calls for Papers are available here:\n",
+			"✅ Set Your Serving Tracks on the Account Setting Page and Topic Interests on the Profile Page: This is the most important initial step. As a TPC member, you can select multiple tracks (at least one required). You'll be assigned papers from your chosen tracks, each containing various topics. Please indicate your interest level in these topics to help us best match papers to your expertise. To date, {{CONFSHORTNAME}} features a number of regular tracks along with several special sessions. Detailed track information and Calls for Papers are available here:\n",
 			"http://icpads2025.ieee-icpads.org.cn/CFP-research-paper.html.\n\n",
 			"After the paper submission deadline, you will receive further instructions about the review process, including paper bidding and review assignments.\n\n",
 			"Thank you once again for your dedication to making {{CONFSHORTNAME}} a great success. Should you have any questions, please do not hesitate to contact us at {{ADMIN}}.\n\n",
@@ -780,7 +780,7 @@
 		"subject": "[{{CONFSHORTNAME}}] Welcome to the Program Committee as Track Co-Chair",
 		"body": [
 			"Dear {{IF(USERTITLE)}}{{USERTITLE}} {{ENDIF}}{{NAME}},\n\n",
-			"On behalf of the Technical Program Committee, we sincerely appreciate your acceptance to serve as Track Co-Chair for {{CONFSHORTNAME}}. Your expertise and leadership will be invaluable in maintaining the high standards of your track. To streamline your preparation and ensure a smooth process, please review the following next steps:\n\n",
+			"On behalf of the Technical Program Committee, we sincerely appreciate your acceptance to serve as Track Co-Chair for {{CONFNAME}}. Your expertise and leadership will be invaluable in maintaining the high standards of your track. To streamline your preparation and ensure a smooth process, please review the following next steps:\n\n",
 			"1. Activate your account\n",
 			"- Site: {{LINK}}\n",
 			"- Your Email: {{EMAIL}}\n",
