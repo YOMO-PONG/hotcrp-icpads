@@ -379,6 +379,10 @@ class ReviewStatus_PaperColumn extends PaperColumn {
         foreach ($row->all_reviews() as $rrow) {
             if ($user->can_view_review_assignment($row, $rrow)
                 && ($this->round === null || $this->round === $rrow->reviewRound)) {
+                // 排除 Meta review
+                if ($rrow->reviewType === REVIEW_META) {
+                    continue;
+                }
                 if ($rrow->reviewStatus >= ReviewInfo::RS_COMPLETED) {
                     ++$done;
                     ++$started;
