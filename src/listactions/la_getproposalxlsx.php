@@ -125,11 +125,11 @@ class GetProposalXlsx_ListAction extends ListAction {
         // Header 顺序
         $header = [
             "Track","Paper ID","Title","Authors (affiliation, country)",
-            "Reviews Completed","Score","Average Score","Span","Proposal"
+            "Reviews Completed","Score","Average Score","Span","Decision"
         ];
 
         // 生成并下载
-        $xlsx = new XlsxGenerator($conf->download_prefix . 'track-proposal.xlsx');
+        $xlsx = new XlsxGenerator($conf->download_prefix . 'decision-proposal.xlsx');
         $xlsx->add_sheet($header, $rows);
         $xlsx->emit();
     }

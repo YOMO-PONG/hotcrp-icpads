@@ -275,7 +275,7 @@
     },
     {
         "name": "get/proposal", "get": true,
-        "title": "Track Proposal (CSV)",
+        "title": "TrackChair Decision(CSV)",
         "order": 10095,
         "allow_if": "pc",
         "allow_api": true,
@@ -284,7 +284,7 @@
     },
     {
         "name": "get/proposalxlsx", "get": true,
-        "title": "Track Proposal (XLSX)",
+        "title": "TrackChair Decision (XLSX)",
         "order": 10096,
         "allow_if": "pc",
         "allow_api": true,

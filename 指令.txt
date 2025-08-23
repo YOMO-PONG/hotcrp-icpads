@@ -1,1 +1,1 @@
-统计投稿数据：docker-compose -f /home/icpads/hotcrp/hotcrp-docker-compose/docker-compose.yaml exec -T php php /srv/www/api/batch/submission_track_stats.php --output=/srv/www/api/submission_track_stats.csv
+docker-compose -f /home/icpads/hotcrp/hotcrp-docker-compose/docker-compose.yaml exec -T php php /srv/www/api/batch/submission_track_stats.php --output=/srv/www/api/submission_track_stats_new.csv

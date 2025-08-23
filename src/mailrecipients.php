@@ -232,9 +232,11 @@ class MailRecipients extends MessageSet {
         }
         if (empty($tags)) {
             $this->defsel("pc", "Program committee", self::F_ANYPC | self::F_NOPAPERS);
+            $this->defsel("non-pc", "Non-PC members", self::F_ANYPC | self::F_NOPAPERS);
         } else {
             $this->defsel("pc_group", "Program committee", self::F_GROUP);
             $this->defsel("pc", "Program committee", self::F_ANYPC | self::F_NOPAPERS);
+            $this->defsel("non-pc", "Non-PC members", self::F_ANYPC | self::F_NOPAPERS);
             foreach ($tags as $t) {
                 $this->defsel("pc:{$t}", "#{$t} program committee", self::F_ANYPC | self::F_NOPAPERS);
             }
@@ -486,6 +488,10 @@ class MailRecipients extends MessageSet {
                 $x = sqlq(Dbl::escape_like(substr($t, 3)));
                 $where[] = "ContactInfo.contactTags like " . Dbl::utf8ci("'% {$x}#%'");
             }
+        } else if ($t === "non-pc") {
+            $needpaper = false;
+            $where[] = "(ContactInfo.roles&" . Contact::ROLE_PC . ")=0";
+            $where[] = "(ContactInfo.roles!=0 or lastLogin>0 or exists (select * from PaperConflict where contactId=ContactInfo.contactId) or exists (select * from PaperReview where contactId=ContactInfo.contactId and reviewType>0))";
         } else if ($revmatch) {
             $needpaper = true;
             $joins[] = "join Paper";

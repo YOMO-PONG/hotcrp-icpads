@@ -1,5 +1,5 @@
 <?php
-// submission_track_stats.php -- Export per-track submission stats and non-PC author count as CSV
+// submission_track_stats.php -- Export per-track submission stats with totals as CSV
 // Usage: php batch/submission_track_stats.php [--output=FILE]
 
 if (realpath($_SERVER["PHP_SELF"]) === __FILE__) {
@@ -84,48 +84,39 @@ class SubmissionTrackStats_Batch {
             }
         }
 
-        // Compute total number of unique non-PC authors on non-withdrawn papers
-        $non_pc_author_total = 0;
-        $result = $this->conf->qe(
-            "select count(distinct pc.contactId) as cnt\n"
-            . "from PaperConflict pc\n"
-            . "join Paper p on (p.paperId=pc.paperId and p.timeWithdrawn<=0)\n"
-            . "join ContactInfo c on (c.contactId=pc.contactId)\n"
-            . "where pc.conflictType>=" . CONFLICT_AUTHOR . " and (c.roles&" . Contact::ROLE_PC . ")=0"
-        );
-        if ($result) {
-            $row = $result->fetch_object();
-            if ($row && isset($row->cnt)) {
-                $non_pc_author_total = (int) $row->cnt;
-            }
-            Dbl::free($result);
+        // Calculate totals for summary row
+        $total_papers = 0;
+        $total_registered = 0; 
+        $total_submitted = 0;
+        foreach ($track_buckets as $bucket) {
+            $total_papers += $bucket["total_papers"];
+            $total_registered += $bucket["registered"];
+            $total_submitted += $bucket["submitted"];
         }
 
         // Prepare CSV header and rows
-        $header = ["track", "total_papers", "registered", "submitted", "non_pc_authors_total"];
+        $header = ["track", "total_papers", "registered", "submitted"];
         $this->csv->set_keys($header);
         $this->csv->set_header($header);
 
         foreach ($track_buckets as $bucket) {
-            // Output per-track rows (non_pc_authors_total left blank)
+            // Output per-track rows
             $track_key = $bucket["track"];
             $display_name = $track_display_map[strtolower($track_key)] ?? $track_key;
             $this->csv->add_row([
                 "track" => $display_name,
                 "total_papers" => $bucket["total_papers"],
                 "registered" => $bucket["registered"],
-                "submitted" => $bucket["submitted"],
-                "non_pc_authors_total" => ""
+                "submitted" => $bucket["submitted"]
             ]);
         }
 
-        // Add a summary row for non-PC authors total
+        // Add a summary row with totals
         $this->csv->add_row([
             "track" => "ALL",
-            "total_papers" => "",
-            "registered" => "",
-            "submitted" => "",
-            "non_pc_authors_total" => $non_pc_author_total
+            "total_papers" => $total_papers,
+            "registered" => $total_registered,
+            "submitted" => $total_submitted
         ]);
 
         // Output
@@ -143,7 +134,7 @@ class SubmissionTrackStats_Batch {
             "config: !",
             "help,h !",
             "output:,o: =FILE Output CSV file (default: stdout)"
-        )->description("Output CSV with per-track paper counts (total/registered/submitted) and a final row with total non-PC authors.\nUsage: php batch/submission_track_stats.php [--output=FILE]")
+        )->description("Output CSV with per-track paper counts (total/registered/submitted) and a final summary row with totals.\nUsage: php batch/submission_track_stats.php [--output=FILE]")
          ->helpopt("help")
          ->parse($argv);
 

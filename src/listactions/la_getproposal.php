@@ -161,7 +161,7 @@ class GetProposal_ListAction extends ListAction {
                 "Score" => $score_disp,
                 "Average Score" => $avg_disp,
                 "Span" => $span_disp,
-                "Proposal" => $proposal
+                "Decision" => $proposal
             ];
         }
         $user->set_overrides($overrides);
@@ -185,11 +185,11 @@ class GetProposal_ListAction extends ListAction {
             "Score",
             "Average Score",
             "Span",
-            "Proposal"
+            "Decision"
         ];
 
         // 导出 CSV
-        return $conf->make_csvg("track-proposal")
+        return $conf->make_csvg("decision-proposal")
             ->select($header)
             ->append($rows);
     }

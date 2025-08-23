@@ -17,3 +17,4 @@
 /test/oauth/auths.json
 /test/oauth/composer.lock
 /vendor
+*.csv
