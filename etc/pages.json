@@ -92,6 +92,7 @@
         "allow_if": "conf.time_all_author_view_decision",
         "print_function": "Home_Page::print_info_accepted"
     },
+    [   "home/sidebar/info/contact", 50, "Home_Page::print_info_contact"   ],
     [   "home/sidebar/info/help", 100, "Home_Page::print_info_help"   ],
 
 
@@ -250,5 +251,6 @@
     {   "name": "scorechart", "print_function": "Scorechart_Page::go"   },
     {   "name": "search", "print_function": "Search_Page::go"   },
     {   "name": "settings", "print_function": "Settings_Page::go"   },
-    {   "name": "users", "print_function": "Users_Page::go", "allow_disabled": true   }
+    {   "name": "users", "print_function": "Users_Page::go", "allow_disabled": true   },
+    {   "name": "ieeeecf", "print_function": "IeeeEcf_Page::go"   }
 ]
