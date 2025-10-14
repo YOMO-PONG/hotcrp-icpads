@@ -1144,7 +1144,8 @@ class PaperInfo {
         if (($this->_flags & self::HAS_PHASE) === 0) {
             if ($this->timeSubmitted > 0
                 && $this->conf->allow_final_versions()
-                && $this->can_author_view_decision()) {
+                && $this->can_author_view_decision()
+                && !$this->is_conditionally_accepted()) { // Don't enter final phase if conditionally accepted
                 $phase = self::PHASE_FINAL;
             } else {
                 $phase = self::PHASE_REVIEW;
@@ -1825,6 +1826,16 @@ class PaperInfo {
             && ($this->outcome_sign === -2
                 || ($this->conf->_au_seedec
                     && $this->conf->_au_seedec->test($this, null)));
+    }
+
+    /** @return bool */
+    function is_conditionally_accepted() {
+        if ($this->outcome_sign <= 0) {
+            return false;
+        }
+        $decision = $this->decision();
+        return stripos($decision->name, 'conditionally') !== false 
+            && stripos($decision->name, 'accepted') !== false;
     }
 
     /** @return 0|1|2 */
