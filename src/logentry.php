@@ -227,7 +227,7 @@ class LogEntryGenerator {
         }
         $qv[] = $this->pids;
         $qv[] = "\\(papers.* (" . join("|", $this->pids) . ")[,)]";
-        return "(paperId?a or action rlike " . Dbl::utf8ci($this->conf->dblink, "?") . ")";
+        return "(paperId?a or convert(action using " . Dbl::utf8_charset($this->conf->dblink) . ") rlike " . Dbl::utf8ci($this->conf->dblink, "?") . ")";
     }
 
     /** @return string */
@@ -239,7 +239,7 @@ class LogEntryGenerator {
         $qv[] = $this->uids;
         $qv[] = $this->email_regex;
         // XXX trueContactId (actas)?
-        return "(contactId?a or destContactId?a or action rlike " . Dbl::utf8ci($this->conf->dblink, "?") . ")";
+        return "(contactId?a or destContactId?a or convert(action using " . Dbl::utf8_charset($this->conf->dblink) . ") rlike " . Dbl::utf8ci($this->conf->dblink, "?") . ")";
     }
 
     /** @return string */
@@ -248,7 +248,7 @@ class LogEntryGenerator {
             return "false";
         }
         $qv[] = $this->action_regex;
-        return "action rlike " . Dbl::utf8ci($this->conf->dblink, "?");
+        return "convert(action using " . Dbl::utf8_charset($this->conf->dblink) . ") rlike " . Dbl::utf8ci($this->conf->dblink, "?");
     }
 
     /** @return string */
