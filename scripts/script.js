@@ -5216,6 +5216,7 @@ handle_ui.on("input.js-email-populate", function () {
         idx = parseInt(this.name.substring(8));
         nn = f.elements["authors:" + idx + ":name"];
         af = f.elements["authors:" + idx + ":affiliation"];
+        country = f.elements["authors:" + idx + ":country"];
     } else if (this.name.startsWith("contacts:")) {
         idx = parseInt(this.name.substring(9));
         nn = f.elements["contacts:" + idx + ":name"];

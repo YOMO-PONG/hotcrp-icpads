@@ -11,6 +11,8 @@ class Author {
     public $email = "";
     /** @var string */
     public $affiliation = "";
+    /** @var string */
+    public $country = "";
     /** @var ?string */
     private $_name;
     /** @var null|Author|array{string,string,string} */
@@ -45,6 +47,7 @@ class Author {
             $this->lastName = $x->lastName;
             $this->email = $x->email;
             $this->affiliation = $x->affiliation;
+            $this->country = $x->country ?? "";
         } else if ($x !== null && $x !== "") {
             $this->assign_string($x);
         }
@@ -61,6 +64,7 @@ class Author {
         $au->lastName = $w[1] ?? "";
         $au->email = $w[2] ?? "";
         $au->affiliation = $w[3] ?? "";
+        $au->country = $w[4] ?? "";
         $au->author_index = $author_index;
         return $au;
     }
@@ -128,6 +132,9 @@ class Author {
         }
         if ($this->affiliation === "") {
             $this->affiliation = $o->affiliation;
+        }
+        if ($this->country === "" && property_exists($o, 'country')) {
+            $this->country = $o->country ?? "";
         }
         $this->_deaccents = null;
     }
@@ -197,6 +204,7 @@ class Author {
         $l = $arr["lastName"] ?? $arr["last"] ?? $arr["familyName"] ?? $arr["family"] ?? null;
         $e = $arr["email"] ?? null;
         $a = $arr["affiliation"] ?? null;
+        $c = $arr["country"] ?? null;
         if (($n = $arr["name"] ?? $arr["fullName"] ?? null) !== null) {
             $this->_name = $n;
             list($ff, $ll, $ee) = Text::split_name($n, true);
@@ -210,6 +218,7 @@ class Author {
         $this->lastName = $l ?? "";
         $this->email = $e ?? "";
         $this->affiliation = $a ?? "";
+        $this->country = $c ?? "";
     }
 
     /** @return $this */
@@ -281,7 +290,7 @@ class Author {
 
     /** @return bool */
     function is_empty() {
-        return $this->email === "" && $this->firstName === "" && $this->lastName === "" && $this->affiliation === "";
+        return $this->email === "" && $this->firstName === "" && $this->lastName === "" && $this->affiliation === "" && $this->country === "";
     }
 
     /** @return bool */
@@ -308,24 +317,26 @@ class Author {
     /** @param Author|Contact $x
      * @return bool */
     function nea_equals($x) {
+        $x_country = property_exists($x, 'country') ? ($x->country ?? "") : "";
         return $this->email === $x->email
             && $this->firstName === $x->firstName
             && $this->lastName === $x->lastName
-            && $this->affiliation === $x->affiliation;
+            && $this->affiliation === $x->affiliation
+            && $this->country === $x_country;
     }
 
     /** @return string */
     function unparse_tabbed() {
-        return "{$this->firstName}\t{$this->lastName}\t{$this->email}\t{$this->affiliation}";
+        return "{$this->firstName}\t{$this->lastName}\t{$this->email}\t{$this->affiliation}\t{$this->country}";
     }
 
-    /** @return array{email?:string,first?:string,last?:string,affiliation?:string} */
+    /** @return array{email?:string,first?:string,last?:string,affiliation?:string,country?:string} */
     function unparse_nea_json() {
         return self::unparse_nea_json_for($this);
     }
 
     /** @param Author|Contact $x
-     * @return array{email?:string,first?:string,last?:string,affiliation?:string} */
+     * @return array{email?:string,first?:string,last?:string,affiliation?:string,country?:string} */
     static function unparse_nea_json_for($x) {
         $j = [];
         if ($x->email !== "") {
@@ -339,6 +350,9 @@ class Author {
         }
         if ($x->affiliation !== "") {
             $j["affiliation"] = $x->affiliation;
+        }
+        if (property_exists($x, 'country') && ($x->country ?? "") !== "") {
+            $j["country"] = $x->country;
         }
         return $j;
     }

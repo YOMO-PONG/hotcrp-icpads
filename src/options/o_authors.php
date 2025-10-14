@@ -57,6 +57,7 @@ class Authors_PaperOption extends PaperOption {
             $req_orcid = 0;
         }
         $msg_bademail = $msg_missing = $msg_dupemail = false;
+        $msg_missing_affiliation = $msg_missing_country = false;
         $msg_orcid = [];
         $n = 0;
         foreach ($aulist as $auth) {
@@ -81,8 +82,20 @@ class Authors_PaperOption extends PaperOption {
                 && !validate_email($auth->email)
                 && !$ov->prow->author_by_email($auth->email)) {
                 $ov->estop(null);
-                $ov->append_item(MessageItem::estop_at("authors:{$n}", "<0>Invalid email address ‘{$auth->email}’"));
+                $ov->append_item(MessageItem::estop_at("authors:{$n}", "<0>Invalid email address '{$auth->email}'"));
                 continue;
+            }
+            // Check for required affiliation field
+            if ($auth->affiliation === "") {
+                $msg_missing_affiliation = true;
+                $ov->estop(null);
+                $ov->append_item(MessageItem::estop_at("authors:{$n}:affiliation", "<0>Affiliation is required for each author"));
+            }
+            // Check for required country field
+            if ($auth->country === "") {
+                $msg_missing_country = true;
+                $ov->estop(null);
+                $ov->append_item(MessageItem::estop_at("authors:{$n}:country", "<0>Country is required for each author"));
             }
             if ($req_orcid > 0) {
                 if ($auth->email === "") {
@@ -122,6 +135,49 @@ class Authors_PaperOption extends PaperOption {
     }
 
     function value_save(PaperValue $ov, PaperStatus $ps) {
+        // Check if we're in final phase and restrict changes
+        $is_final_phase = $ov->prow->phase() === PaperInfo::PHASE_FINAL;
+        $can_admin = $ps->user->can_administer($ov->prow);
+        
+        if ($is_final_phase && !$can_admin) {
+            // In final phase, only allow changes to affiliation and country
+            $new_authlist = $this->author_list($ov);
+            $old_authlist = $this->author_list($ov->prow->base_option($this->id));
+            
+            // Check if the number of authors changed (order change)
+            if (count($new_authlist) !== count($old_authlist)) {
+                $ov->estop("Author list length cannot be changed in final phase");
+                return false;
+            }
+            
+            // Check each author for forbidden changes
+            foreach ($new_authlist as $i => $new_auth) {
+                $old_auth = $old_authlist[$i] ?? new Author;
+                
+                // Check if name changed
+                if ($new_auth->name(NAME_PARSABLE) !== $old_auth->name(NAME_PARSABLE)) {
+                    $ov->estop("Author names cannot be changed in final phase");
+                    return false;
+                }
+                
+                // Check if email changed
+                if ($new_auth->email !== $old_auth->email) {
+                    $ov->estop("Author emails cannot be changed in final phase");
+                    return false;
+                }
+                
+                // Affiliation and country changes are allowed - no validation needed
+            }
+            
+            // Check if author order changed by comparing emails in sequence
+            $old_emails = array_map(function($a) { return $a->email; }, $old_authlist);
+            $new_emails = array_map(function($a) { return $a->email; }, $new_authlist);
+            if ($old_emails !== $new_emails) {
+                $ov->estop("Author order cannot be changed in final phase");
+                return false;
+            }
+        }
+        
         // construct property
         $authlist = $this->author_list($ov);
         $d = "";
@@ -159,6 +215,15 @@ class Authors_PaperOption extends PaperOption {
             if ($au->affiliation === "") {
                 $au->affiliation = $aux->affiliation;
             }
+            if ($au->country === "" && property_exists($aux, 'country')) {
+                $au->country = $aux->country ?? "";
+            }
+        }
+        // Also try to get country from user account if email is provided
+        if ($au->email !== "" && $au->country === "") {
+            if (($u = $prow->conf->user_by_email($au->email))) {
+                $au->country = $u->country_code();
+            }
         }
     }
     function parse_qreq(PaperInfo $prow, Qrequest $qreq) {
@@ -168,10 +233,11 @@ class Authors_PaperOption extends PaperOption {
             $email = $qreq["authors:{$n}:email"];
             $name = $qreq["authors:{$n}:name"];
             $aff = $qreq["authors:{$n}:affiliation"];
-            if ($email === null && $name === null && $aff === null) {
+            $country = $qreq["authors:{$n}:country"];
+            if ($email === null && $name === null && $aff === null && $country === null) {
                 break;
             }
-            $auth->email = $auth->firstName = $auth->lastName = $auth->affiliation = "";
+            $auth->email = $auth->firstName = $auth->lastName = $auth->affiliation = $auth->country = "";
             $name = simplify_whitespace($name ?? "");
             if ($name !== "" && $name !== "Name") {
                 list($auth->firstName, $auth->lastName, $auth->email) = Text::split_name($name, true);
@@ -183,6 +249,10 @@ class Authors_PaperOption extends PaperOption {
             $aff = simplify_whitespace($aff ?? "");
             if ($aff !== "" && $aff !== "Affiliation") {
                 $auth->affiliation = $aff;
+            }
+            $country = simplify_whitespace($country ?? "");
+            if ($country !== "") {
+                $auth->country = $country;
             }
             // some people enter email in the affiliation slot
             if (strpos($aff, "@") !== false
@@ -225,14 +295,54 @@ class Authors_PaperOption extends PaperOption {
     }
 
     private function editable_author_component_entry($pt, $n, $component, $au, $reqau, $ignore_diff) {
+        // Check if we're in final phase and restrict editing
+        $is_final_phase = $pt->prow->phase() === PaperInfo::PHASE_FINAL;
+        
         if ($component === "name") {
             $js = ["size" => "35", "placeholder" => "Name", "autocomplete" => "off", "aria-label" => "Author name"];
             $auval = $au ? $au->name(NAME_PARSABLE) : "";
             $val = $reqau ? $reqau->name(NAME_PARSABLE) : "";
+            
+            // In final phase, make name field readonly
+            if ($is_final_phase && !$pt->user->can_administer($pt->prow)) {
+                $js["readonly"] = true;
+                $js["title"] = "Author names cannot be modified in final phase";
+                $js["class"] = ($js["class"] ?? "") . " readonly-final-phase";
+            }
         } else if ($component === "email") {
             $js = ["size" => "30", "placeholder" => "Email", "autocomplete" => "off", "aria-label" => "Author email"];
             $auval = $au ? $au->email : "";
             $val = $reqau ? $reqau->email : "";
+            
+            // In final phase, make email field readonly
+            if ($is_final_phase && !$pt->user->can_administer($pt->prow)) {
+                $js["readonly"] = true;
+                $js["title"] = "Author emails cannot be modified in final phase";
+                $js["class"] = ($js["class"] ?? "") . " readonly-final-phase";
+            }
+        } else if ($component === "affiliation") {
+            $js = ["size" => "32", "placeholder" => "Affiliation", "autocomplete" => "off", "aria-label" => "Author affiliation"];
+            $auval = $au ? $au->affiliation : "";
+            $val = $reqau ? $reqau->affiliation : "";
+            // Affiliation remains editable in final phase
+        } else if ($component === "country") {
+            // Country field uses a selector instead of text input
+            $auval = $au ? $au->country : "";
+            $val = $reqau ? $reqau->country : "";
+            $country = $val !== "" ? $val : $auval;
+            $country = Countries::fix($country);
+            
+            $extra = [
+                "id" => "authors:{$n}:country",
+                "class" => $pt->max_control_class(["authors:{$n}", "authors:{$n}:country"], "js-autosubmit editable-author editable-author-country" . ($ignore_diff ? " ignore-diff" : "")),
+                "autocomplete" => "country",
+                "aria-label" => "Author country"
+            ];
+            if ($val !== $auval) {
+                $extra["data-default-value"] = $auval;
+            }
+            // Country remains editable in final phase
+            return Countries::selector("authors:{$n}:country", $country, $extra);
         } else {
             $js = ["size" => "32", "placeholder" => "Affiliation", "autocomplete" => "off", "aria-label" => "Author affiliation"];
             $auval = $au ? $au->affiliation : "";
@@ -262,19 +372,37 @@ class Authors_PaperOption extends PaperOption {
             $ignore_diff = true;
         }
 
-        echo '<div class="author-entry draggable d-flex">';
+        // Check if we're in final phase to disable reordering
+        $is_final_phase = $pt->prow->phase() === PaperInfo::PHASE_FINAL;
+        $can_admin = $pt->user->can_administer($pt->prow);
+        
+        // Disable dragging in final phase for non-admins
+        $div_classes = "author-entry d-flex";
+        if (!$is_final_phase || $can_admin) {
+            $div_classes .= " draggable";
+        }
+        
+        echo '<div class="' . $div_classes . '">';
         if ($shownum) {
-            echo '<div class="flex-grow-0"><button type="button" class="draghandle ui js-dropmenu-open ui-drag row-order-draghandle need-tooltip need-dropmenu" draggable="true" title="Click or drag to reorder" data-tooltip-anchor="e">&zwnj;</button></div>',
-                '<div class="flex-grow-0 row-counter">', $n, '.</div>';
+            if (!$is_final_phase || $can_admin) {
+                // Show drag handle only if not in final phase or user is admin
+                echo '<div class="flex-grow-0"><button type="button" class="draghandle ui js-dropmenu-open ui-drag row-order-draghandle need-tooltip need-dropmenu" draggable="true" title="Click or drag to reorder" data-tooltip-anchor="e">&zwnj;</button></div>';
+            } else {
+                // Show disabled drag handle with explanation
+                echo '<div class="flex-grow-0"><span class="draghandle-disabled need-tooltip" title="Author order cannot be changed in final phase" data-tooltip-anchor="e">&zwnj;</span></div>';
+            }
+            echo '<div class="flex-grow-0 row-counter">', $n, '.</div>';
         }
         echo '<div class="flex-grow-1">',
             $this->editable_author_component_entry($pt, $n, "email", $au, $reqau, $ignore_diff), ' ',
             $this->editable_author_component_entry($pt, $n, "name", $au, $reqau, $ignore_diff), ' ',
-            $this->editable_author_component_entry($pt, $n, "affiliation", $au, $reqau, $ignore_diff),
+            $this->editable_author_component_entry($pt, $n, "affiliation", $au, $reqau, $ignore_diff), ' ',
+            $this->editable_author_component_entry($pt, $n, "country", $au, $reqau, $ignore_diff),
             $pt->messages_at("authors:{$n}"),
             $pt->messages_at("authors:{$n}:email"),
             $pt->messages_at("authors:{$n}:name"),
             $pt->messages_at("authors:{$n}:affiliation"),
+            $pt->messages_at("authors:{$n}:country"),
             '</div></div>';
     }
     function print_web_edit(PaperTable $pt, $ov, $reqov) {
@@ -310,8 +438,20 @@ class Authors_PaperOption extends PaperOption {
         }
         $ndigits = (int) ceil(log10($nau + 1));
 
-        echo '<div class="papev">',
-            '<div id="authors:container" class="js-row-order need-row-order-autogrow" data-min-rows="', $min_authors, '"',
+        // Check if we're in final phase to disable row ordering
+        $is_final_phase = $pt->prow->phase() === PaperInfo::PHASE_FINAL;
+        $can_admin = $pt->user->can_administer($pt->prow);
+        
+        $container_classes = "need-row-order-autogrow";
+        if (!$is_final_phase || $can_admin) {
+            $container_classes .= " js-row-order";
+        }
+        
+        echo '<div class="papev">';
+        if ($is_final_phase && !$can_admin) {
+            echo '<div class="msg msg-warning"><strong>Note:</strong> In the final phase, you can only modify author affiliations and countries. Author names, emails, and order cannot be changed.</div>';
+        }
+        echo '<div id="authors:container" class="', $container_classes, '" data-min-rows="', $min_authors, '"',
             $this->max_count > 0 ? " data-max-rows=\"{$this->max_count}\"" : "",
             ' data-row-counter-digits="', $ndigits,
             '" data-row-template="authors:row-template">';
@@ -343,7 +483,13 @@ class Authors_PaperOption extends PaperOption {
                 }
                 $t = ($n === "" ? $e : $n);
                 if ($au->affiliation !== "") {
-                    $t .= " <span class=\"auaff\">(" . htmlspecialchars($au->affiliation) . ")</span>";
+                    $t .= " <span class=\"auaff\">(" . htmlspecialchars($au->affiliation);
+                    if ($au->country !== "") {
+                        $t .= ", " . htmlspecialchars(Countries::code_to_name($au->country));
+                    }
+                    $t .= ")</span>";
+                } else if ($au->country !== "") {
+                    $t .= " <span class=\"auaff\">(" . htmlspecialchars(Countries::code_to_name($au->country)) . ")</span>";
                 }
                 if ($n !== "" && $e !== "") {
                     $t .= " " . $e;

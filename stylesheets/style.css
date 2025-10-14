@@ -5448,3 +5448,30 @@ th.pl_logaction {
 	stroke: black;
 	shape-rendering: crispEdges;
 }
+
+/* Custom styles for final phase author restrictions */
+.readonly-final-phase {
+	background-color: #f8f8f8 !important;
+	color: #666 !important;
+	cursor: not-allowed !important;
+}
+
+.readonly-final-phase:focus {
+	outline: 1px solid #ddd !important;
+	box-shadow: none !important;
+}
+
+.draghandle-disabled {
+	color: #ccc !important;
+	cursor: not-allowed !important;
+	opacity: 0.3;
+}
+
+.author-entry .msg-warning {
+	margin-bottom: 10px;
+	padding: 8px 12px;
+	background-color: #fff3cd;
+	border: 1px solid #ffeaa7;
+	border-radius: 4px;
+	color: #856404;
+}

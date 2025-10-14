@@ -32,13 +32,17 @@ class GetAuthors_ListAction extends ListAction {
                     "given_name" => $au->firstName,
                     "family_name" => $au->lastName,
                     "email" => $au->email,
-                    "affiliation" => $au->affiliation
+                    "affiliation" => $au->affiliation,
+                    "country" => $au->country ?? ""
                 ];
                 $lemail = strtolower($au->email);
                 if ($au->email !== ""
                     && ($u = $conf->user_by_email($au->email))) {
                     $line["orcid"] = $u->decorated_orcid();
-                    $line["country"] = $u->country_code();
+                    // Use submission country if available, otherwise use account country
+                    if ($line["country"] === "") {
+                        $line["country"] = $u->country_code();
+                    }
                     $has_orcid = $has_orcid || $line["orcid"] !== "";
                     $has_country = $has_country || $line["country"] !== "";
                     if ($admin) {
@@ -46,6 +50,8 @@ class GetAuthors_ListAction extends ListAction {
                         $has_iscontact = true;
                     }
                     $aucid[$u->contactId] = true;
+                } else {
+                    $has_country = $has_country || $line["country"] !== "";
                 }
                 $texts[] = $line;
             }
