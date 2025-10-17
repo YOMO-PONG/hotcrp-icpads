@@ -89,7 +89,7 @@
     [   "home/sidebar/info/site", 30, "Home_Page::print_info_site"   ],
     {
         "name": "home/sidebar/info/accepted", "order": 40,
-        "allow_if": "conf.time_all_author_view_decision",
+        "allow_if": "false",
         "print_function": "Home_Page::print_info_accepted"
     },
     [   "home/sidebar/info/contact", 50, "Home_Page::print_info_contact"   ],

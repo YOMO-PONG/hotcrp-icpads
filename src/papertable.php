@@ -1991,8 +1991,8 @@ class PaperTable {
     /** @param DecisionInfo $viewable_decision
      * @param bool $is_author */
     private function _edit_message_submitted($viewable_decision, $is_author) {
-        // Check if this is a conditionally accepted paper
-        if ($this->prow->is_conditionally_accepted()) {
+        // Check if this is a conditionally accepted paper AND user can view the decision
+        if ($this->prow->is_conditionally_accepted() && $this->user->can_view_decision($this->prow)) {
             $this->_main_message(MessageSet::SUCCESS, "<5><strong>Congratulations! Your paper has been conditionally accepted.</strong>");
             $this->_main_message(MessageSet::WARNING, "<5><strong>Important:</strong> Please carefully review all reviewer comments and address the required revisions. Once you have incorporated all feedback, the program chair will approve your final version upload. You can view and respond to reviewer comments in the bottom of the main page.");
         } else if ($this->conf->allow_final_versions()

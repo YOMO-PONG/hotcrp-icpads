@@ -144,14 +144,20 @@ class Authors_PaperOption extends PaperOption {
             $new_authlist = $this->author_list($ov);
             $old_authlist = $this->author_list($ov->prow->base_option($this->id));
             
-            // Check if the number of authors changed (order change)
-            if (count($new_authlist) !== count($old_authlist)) {
+            // Filter out empty authors from new list (UI may submit empty rows)
+            $new_authlist_filtered = array_filter($new_authlist, function($auth) {
+                return !$auth->is_empty();
+            });
+            $new_authlist_filtered = array_values($new_authlist_filtered); // reindex
+            
+            // Check if the number of authors changed
+            if (count($new_authlist_filtered) !== count($old_authlist)) {
                 $ov->estop("Author list length cannot be changed in final phase");
                 return false;
             }
             
-            // Check each author for forbidden changes
-            foreach ($new_authlist as $i => $new_auth) {
+            // Check each author for forbidden changes (use filtered list)
+            foreach ($new_authlist_filtered as $i => $new_auth) {
                 $old_auth = $old_authlist[$i] ?? new Author;
                 
                 // Check if name changed
@@ -169,9 +175,9 @@ class Authors_PaperOption extends PaperOption {
                 // Affiliation and country changes are allowed - no validation needed
             }
             
-            // Check if author order changed by comparing emails in sequence
+            // Check if author order changed by comparing emails in sequence (use filtered list)
             $old_emails = array_map(function($a) { return $a->email; }, $old_authlist);
-            $new_emails = array_map(function($a) { return $a->email; }, $new_authlist);
+            $new_emails = array_map(function($a) { return $a->email; }, $new_authlist_filtered);
             if ($old_emails !== $new_emails) {
                 $ov->estop("Author order cannot be changed in final phase");
                 return false;
@@ -186,6 +192,7 @@ class Authors_PaperOption extends PaperOption {
                 $d .= ($d === "" ? "" : "\n") . $auth->unparse_tabbed();
             }
         }
+        
         // apply change
         if ($d !== $ov->prow->base_option($this->id)->data()) {
             $ps->change_at($this);
@@ -205,22 +212,26 @@ class Authors_PaperOption extends PaperOption {
         }
         $ps->checkpoint_conflict_values();
     }
-    static private function expand_author(Author $au, PaperInfo $prow) {
+    static private function expand_author(Author $au, PaperInfo $prow, $skip_affiliation_country = false) {
         if ($au->email !== ""
             && ($aux = $prow->author_by_email($au->email))) {
             if ($au->firstName === "" && $au->lastName === "") {
                 $au->firstName = $aux->firstName;
                 $au->lastName = $aux->lastName;
             }
-            if ($au->affiliation === "") {
-                $au->affiliation = $aux->affiliation;
-            }
-            if ($au->country === "" && property_exists($aux, 'country')) {
-                $au->country = $aux->country ?? "";
+            // In final phase, don't auto-fill affiliation and country as they are editable
+            if (!$skip_affiliation_country) {
+                if ($au->affiliation === "") {
+                    $au->affiliation = $aux->affiliation;
+                }
+                if ($au->country === "" && property_exists($aux, 'country')) {
+                    $au->country = $aux->country ?? "";
+                }
             }
         }
         // Also try to get country from user account if email is provided
-        if ($au->email !== "" && $au->country === "") {
+        // But skip in final phase as country is user-editable
+        if (!$skip_affiliation_country && $au->email !== "" && $au->country === "") {
             if (($u = $prow->conf->user_by_email($au->email))) {
                 $au->country = $u->country_code();
             }
@@ -229,6 +240,9 @@ class Authors_PaperOption extends PaperOption {
     function parse_qreq(PaperInfo $prow, Qrequest $qreq) {
         $v = [];
         $auth = new Author;
+        // In final phase, don't auto-fill affiliation and country from database
+        $is_final_phase = $prow->phase() === PaperInfo::PHASE_FINAL;
+        
         for ($n = 1; true; ++$n) {
             $email = $qreq["authors:{$n}:email"];
             $name = $qreq["authors:{$n}:name"];
@@ -261,9 +275,10 @@ class Authors_PaperOption extends PaperOption {
                 $auth->affiliation = $auth->email;
                 $auth->email = $aff;
             }
-            self::expand_author($auth, $prow);
+            self::expand_author($auth, $prow, $is_final_phase);
             $v[] = $auth->unparse_tabbed();
         }
+        
         return PaperValue::make($prow, $this, 1, join("\n", $v));
     }
     function parse_json(PaperInfo $prow, $j) {
@@ -271,6 +286,9 @@ class Authors_PaperOption extends PaperOption {
             return PaperValue::make_estop($prow, $this, "<0>Validation error");
         }
         $v = $cemail = [];
+        // In final phase, don't auto-fill affiliation and country from database
+        $is_final_phase = $prow->phase() === PaperInfo::PHASE_FINAL;
+        
         foreach ($j as $i => $auj) {
             if (is_object($auj) || is_associative_array($auj)) {
                 $auth = Author::make_keyed($auj);
@@ -281,7 +299,7 @@ class Authors_PaperOption extends PaperOption {
             } else {
                 return PaperValue::make_estop($prow, $this, "<0>Validation error on author #" . ($i + 1));
             }
-            self::expand_author($auth, $prow);
+            self::expand_author($auth, $prow, $is_final_phase);
             $v[] = $auth->unparse_tabbed();
             if ($contact && $auth->email !== "") {
                 $cemail[] = $auth->email;
@@ -308,6 +326,10 @@ class Authors_PaperOption extends PaperOption {
                 $js["readonly"] = true;
                 $js["title"] = "Author names cannot be modified in final phase";
                 $js["class"] = ($js["class"] ?? "") . " readonly-final-phase";
+                // For readonly fields, use database value if no request value exists
+                if (!$reqau) {
+                    $val = $auval;
+                }
             }
         } else if ($component === "email") {
             $js = ["size" => "30", "placeholder" => "Email", "autocomplete" => "off", "aria-label" => "Author email"];
@@ -319,6 +341,10 @@ class Authors_PaperOption extends PaperOption {
                 $js["readonly"] = true;
                 $js["title"] = "Author emails cannot be modified in final phase";
                 $js["class"] = ($js["class"] ?? "") . " readonly-final-phase";
+                // For readonly fields, use database value if no request value exists
+                if (!$reqau) {
+                    $val = $auval;
+                }
             }
         } else if ($component === "affiliation") {
             $js = ["size" => "32", "placeholder" => "Affiliation", "autocomplete" => "off", "aria-label" => "Author affiliation"];

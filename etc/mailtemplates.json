@@ -803,5 +803,93 @@
 			"Wei Gong, Amiya Nayak and Yaxiong Xie\n",
 			"TPC Co-Chairs, {{CONFSHORTNAME}}\n"
 		]
+	},
+
+	{
+		"name": "conditionalaccept",
+		"title": "Conditional acceptance notification",
+		"order": 59,
+		"default_recipients": "somedec:conditional",
+		"subject": "[{{CONFSHORTNAME}}] Conditional acceptance for submission #{{PID}} {{TITLEHINT}}",
+		"body": [
+			"Dear {{NAME}},\n\n",
+			"We are pleased to inform you that your paper #{{PID}}, titled \"{{TITLE}}\", has been conditionally accepted for inclusion in the {{CONFNAME}} conference technical program.\n\n",
+			"Please note that your paper requires revisions before final acceptance. The detailed revision instructions are provided in the \"Add comment\" section in {{LINK}}. You are required to carefully address each comment listed there and submit both:\n\n",
+			"1. The revised manuscript, with all changes clearly highlighted; and\n\n",
+			"2. A point-by-point response document explaining how all reviewer comments have been addressed.\n\n",
+			"Both the revised manuscript and the response document should be submitted via the \"Add comment\" section in {{LINK}}.\n\n",
+			"The deadline for submitting the revised version and response is October 22, 2025. After review of your revised submission, the paper will be formally accepted once the TPC Chairs confirm that all comments have been satisfactorily addressed.\n\n",
+			"If your paper is officially accepted, please complete your registration before the registration deadline on October 31, 2025.\n\n",
+			"We appreciate your contribution and look forward to your revised submission and to seeing you at {{CONFNAME}}.\n\n",
+			"* Title: {{TITLE}}\n",
+			"* Author(s): {{OPT(AUTHORS)}}\n",
+			"* Site: {{LINK(paper, p={{PID}}, {{AUTHORVIEWCAPABILITY}})}}\n\n",
+			"Visit the submission site for reviews, comments, and related information. Reviews and comments are also included below.\n\n",
+			"Contact {{ADMIN}} with any questions or concerns.\n\n",
+			"Best regards,\n",
+			"Wei Gong, Amiya Nayak, and Yaxiong Xie\n",
+			"TPC Co-Chairs, {{CONFSHORTNAME}}\n\n",
+			"{{SIGNATURE}}\n{{LINK}}\n\n",
+			"{{REVIEWS}}\n",
+			"{{COMMENTS}}\n"
+		]
+	},
+
+	{
+		"name": "acceptnotify_icpads",
+		"title": "ICPADS acceptance notification",
+		"order": 58,
+		"default_recipients": "somedec:yes",
+		"subject": "[{{CONFSHORTNAME}}] Accepted submission #{{PID}} {{TITLEHINT}}",
+		"body": [
+			"Dear {{NAME}},\n\n",
+			"Congratulations!\n\n",
+			"We are pleased to inform you that your paper #{{PID}}, titled \"{{TITLE}}\", has been accepted for inclusion in the {{CONFNAME}} conference technical program. The reviews for your paper are available in {{LINK}}.\n\n",
+			"You can complete author registration and camera-ready paper submission according to the detailed instructions on the conference website. Please carefully address all reviewer comments when preparing your final manuscript.\n\n",
+			"Important deadlines:\n\n",
+			"1. Camera-ready manuscript submission: October 31, 2025\n\n",
+			"2. Author registration: October 31, 2025\n\n",
+			"Once again, congratulations on the acceptance of your paper! We look forward to meeting you at {{CONFNAME}}.\n\n",
+			"* Title: {{TITLE}}\n",
+			"* Author(s): {{OPT(AUTHORS)}}\n",
+			"* Site: {{LINK(paper, p={{PID}}, {{AUTHORVIEWCAPABILITY}})}}\n\n",
+			"{{NUMACCEPTED}} of {{NUMSUBMITTED}} submissions were accepted. Congratulations!\n\n",
+			"Visit the submission site for reviews, comments, and related information. Reviews and comments are also included below.\n\n",
+			"Contact {{ADMIN}} with any questions or concerns.\n\n",
+			"Best regards,\n",
+			"Wei Gong, Amiya Nayak, and Yaxiong Xie\n",
+			"TPC Co-Chairs, {{CONFSHORTNAME}}\n\n",
+			"{{SIGNATURE}}\n{{LINK}}\n\n",
+			"{{REVIEWS}}\n",
+			"{{COMMENTS}}\n"
+		]
+	},
+
+	{
+		"name": "rejectnotify_icpads",
+		"title": "ICPADS rejection notification",
+		"order": 62,
+		"default_recipients": "somedec:no",
+		"subject": "[{{CONFSHORTNAME}}] Rejected submission #{{PID}} {{TITLEHINT}}",
+		"body": [
+			"Dear {{NAME}},\n\n",
+			"Thank you for submitting your paper #{{PID}}, titled \"{{TITLE}}\", to {{CONFNAME}}.\n\n",
+			"We regret to inform you that your paper has not been accepted for inclusion in the {{CONFNAME}} technical program. Due to the highly competitive review process and limited program space, many good submissions unfortunately could not be accommodated this year.\n\n",
+			"The review comments for your paper are available in {{LINK}}. We hope you find the feedback helpful for improving your work.\n\n",
+			"Although your paper could not be accepted, we warmly invite you to attend {{CONFNAME}}, which will be held in Hefei, China, from December 14-18, 2025. The conference will be held in person, offering valuable opportunities for networking and academic exchange.\n\n",
+			"We sincerely thank you for your submission and hope you will consider submitting your future work to ICPADS. We look forward to seeing you at {{CONFNAME}}.\n\n",
+			"* Title: {{TITLE}}\n",
+			"* Author(s): {{OPT(AUTHORS)}}\n",
+			"* Site: {{LINK(paper, p={{PID}}, {{AUTHORVIEWCAPABILITY}})}}\n\n",
+			"{{NUMACCEPTED}} papers were accepted out of {{NUMSUBMITTED}} submissions.\n\n",
+			"Visit the submission site for reviews, comments, and related information. Reviews and comments are also included below.\n\n",
+			"Contact {{ADMIN}} with any questions or concerns.\n\n",
+			"Best regards,\n",
+			"Wei Gong, Amiya Nayak, and Yaxiong Xie\n",
+			"TPC Co-Chairs, {{CONFSHORTNAME}}\n\n",
+			"{{SIGNATURE}}\n{{LINK}}\n\n",
+			"{{REVIEWS}}\n",
+			"{{COMMENTS}}\n"
+		]
 	}
 ]
