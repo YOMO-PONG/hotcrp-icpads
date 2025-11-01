@@ -1,1 +1,6 @@
+输出统计数据
 docker-compose -f /home/icpads/hotcrp/hotcrp-docker-compose/docker-compose.yaml exec -T php php /srv/www/api/batch/submission_track_stats.php --output=/srv/www/api/submission_track_stats_new.csv
+转移论文到不同的submission class
+docker-compose exec php php /srv/www/api/interactive_transfer.php
+复制一篇论文：
+cd /home/icpads/hotcrp/hotcrp-docker-compose && echo "yes" | docker-compose exec -T php php /srv/www/api/duplicate_paper_127_direct.php 2>&1

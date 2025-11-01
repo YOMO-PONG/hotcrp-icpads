@@ -170,7 +170,7 @@ class Home_Page {
         }
     }
     static function print_info_contact(Contact $user) {
-        echo '<li>Contact: <a href="mailto:hotcrp@ieee-icpads.org.cn">hotcrp@ieee-icpads.org.cn</a></li>';
+        echo '<li>Contact: <a href="mailto:tpc-chairs@ieee-icpads.org.cn">tpc-chairs@ieee-icpads.org.cn</a></li>';
     }
     static function print_info_help(Contact $user) {
         if ($user->isPC) {
