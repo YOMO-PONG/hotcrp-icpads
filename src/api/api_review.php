@@ -4,6 +4,42 @@
 
 class Review_API {
     static function review(Contact $user, Qrequest $qreq, PaperInfo $prow) {
+        // Handle POST request for submitting/updating review
+        if ($qreq->is_post() && ($qreq->update || $qreq->savedraft || $qreq->submitreview)) {
+            $rv = new ReviewValues($user->conf);
+            
+            // Parse the request
+            if (!$rv->parse_qreq($qreq)) {
+                return JsonResult::make_error(400, "<0>Failed to parse review request");
+            }
+            
+            // Get the review ID if specified
+            $rrow = null;
+            if (isset($qreq->r)) {
+                $rrow = $prow->full_review_by_ordinal_id($qreq->r);
+            }
+            
+            // Check and save the review
+            $ok = $rv->check_and_save($user, $prow, $rrow);
+            
+            // Build response
+            $content = ["ok" => $ok];
+            $content["message_list"] = $rv->message_list();
+            
+            if ($ok && $rv->review_ordinal_id) {
+                $content["reviewId"] = $rv->review_ordinal_id;
+                // Get updated review info
+                $rrow_updated = $prow->fresh_review_by_id($rv->reviewId);
+                if ($rrow_updated) {
+                    $pex = new PaperExport($user);
+                    $content["review"] = $pex->review_json($prow, $rrow_updated);
+                }
+            }
+            
+            return new JsonResult($content);
+        }
+        
+        // Handle GET request for retrieving review(s)
         if (!$user->can_view_submitted_review($prow)) {
             return JsonResult::make_permission_error();
         }
