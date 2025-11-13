@@ -49,6 +49,8 @@ class MailRecipients extends MessageSet {
     private $_has_paper_set = false;
     /** @var ?PaperInfoSet */
     private $_paper_set;
+    /** @var ?list<string> */
+    private $_contact_tags;
 
     const F_ANYPC = 1;
     const F_GROUP = 2;
@@ -243,10 +245,48 @@ class MailRecipients extends MessageSet {
             $this->defsel("pc_group_end", null, self::F_GROUP);
         }
 
+        if ($user->can_view_user_tags()) {
+            $ctags = $this->viewable_contact_tags();
+            if (!empty($ctags)) {
+                $this->recipt_default_message = null;
+                $this->defsel("contact_tag_group", "Users by tag", self::F_GROUP);
+                foreach ($ctags as $tag) {
+                    $this->defsel("tag:{$tag}", "#{$tag} users", self::F_ANYPC | self::F_NOPAPERS);
+                }
+                $this->defsel("contact_tag_group_end", null, self::F_GROUP);
+            }
+        }
+
         if ($user->privChair) {
             $this->recipt_default_message = null;
             $this->defsel("all", "Active users", self::F_NOPAPERS);
         }
+    }
+
+    /** @return list<string> */
+    private function viewable_contact_tags() {
+        if ($this->_contact_tags !== null) {
+            return $this->_contact_tags;
+        }
+        if (!$this->user->can_view_user_tags()) {
+            return $this->_contact_tags = [];
+        }
+        $tags = [];
+        $result = $this->conf->qe("select contactTags from ContactInfo where contactTags is not null and contactTags!='' and (cflags&?)=0", Contact::CFM_DISABLEMENT);
+        while (($row = $result->fetch_row())) {
+            foreach (Tagger::split_unpack($row[0]) as $tv) {
+                $tag_name = $tv[0];
+                if ($tag_name === ""
+                    || strcasecmp($tag_name, "pc") === 0
+                    || !$this->user->can_view_user_tag($tag_name)) {
+                    continue;
+                }
+                $tags[strtolower($tag_name)] = $tag_name;
+            }
+        }
+        Dbl::free($result);
+        $this->conf->collator()->asort($tags);
+        return $this->_contact_tags = array_values($tags);
     }
 
     /** @param string $type
@@ -492,6 +532,15 @@ class MailRecipients extends MessageSet {
             $needpaper = false;
             $where[] = "(ContactInfo.roles&" . Contact::ROLE_PC . ")=0";
             $where[] = "(ContactInfo.roles!=0 or lastLogin>0 or exists (select * from PaperConflict where contactId=ContactInfo.contactId) or exists (select * from PaperReview where contactId=ContactInfo.contactId and reviewType>0))";
+        } else if (str_starts_with($t, "tag:")) {
+            $needpaper = false;
+            $tagname = substr($t, 4);
+            if ($tagname === "" || !$this->user->can_view_user_tag($tagname)) {
+                $where[] = "false";
+            } else {
+                $x = sqlq(Dbl::escape_like($tagname));
+                $where[] = "ContactInfo.contactTags like " . Dbl::utf8ci("'% {$x}#%'");
+            }
         } else if ($revmatch) {
             $needpaper = true;
             $joins[] = "join Paper";
